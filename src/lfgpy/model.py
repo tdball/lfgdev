@@ -13,6 +13,8 @@ def json_serializer(item: object) -> str | None:
     if isinstance(item, UUID):
         return item.hex
 
+    return None
+
 
 @dataclass(frozen=True, kw_only=True)
 class Message:
