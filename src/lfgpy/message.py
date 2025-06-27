@@ -1,8 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass, asdict
+
 import json
-from uuid import UUID
+from dataclasses import asdict, dataclass, field
 from enum import IntEnum
+from uuid import UUID, uuid4
 
 
 class MessageType(IntEnum):
@@ -16,9 +17,9 @@ def json_serializer(item: object) -> str | None:
     return None
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Message:
-    identifier: UUID
+    identifier: UUID = field(default_factory=uuid4)
     type: MessageType
 
     def to_bytes(self) -> bytes:

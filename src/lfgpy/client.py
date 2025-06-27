@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from lfgpy.model import Message, MessageType
 from uuid import uuid4
 
+from lfgpy.message import Message, MessageType
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, slots=True)
 class Client:
     pass
 
