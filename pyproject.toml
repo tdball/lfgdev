@@ -7,16 +7,12 @@ name = "lfgpy"
 dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 dependencies = []
 
 [project.scripts]
-    lfg-server = "lfgpy.server:main"
-    lfg-client = "lfgpy.client:main"
+lfg-server = "lfgpy.server:main"
+lfg-client = "lfgpy.client:main"
 
 [dependency-groups]
-dev = [
-    "mypy>=1.16.1",
-    "pytest>=8.4.1",
-    "ruff>=0.12.0",
-]
+dev = ["mypy>=1.16.1", "pytest>=8.4.1", "ruff>=0.12.0"]

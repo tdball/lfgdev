@@ -3,17 +3,15 @@ from dataclasses import dataclass, asdict
 import json
 from uuid import UUID
 from enum import IntEnum
-from typing import Self
 
 
 class MessageType(IntEnum):
     HELLO = 0
 
 
-def json_serializer(item: object):
-    match item:
-        case UUID():
-            return item.hex
+def json_serializer(item: object) -> str | None:
+    if isinstance(item, UUID):
+        return item.hex
 
 
 @dataclass(frozen=True, kw_only=True)
