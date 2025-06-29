@@ -43,7 +43,7 @@ def main() -> None:
         match input("Press Enter to continue..."):
             case "":
                 message = Message(kind=MessageKind.HELLO)
-            case "0"|"1"|"2" as kind:
+            case "0" | "1" | "2" as kind:
                 message = Message(kind=MessageKind(int(kind)))
             case _:
                 logger.debug("Unsupported input")
