@@ -24,7 +24,7 @@ def server() -> Generator[Server, None, None]:
 @pytest.mark.integration
 def test_server_client_message_passing(server: Server, client: Client) -> None:
     message = Message(kind=MessageKind.HELLO)
-    client_process = Process(target=client.send_message, args=(message,))
+    client_process = Process(target=client.send, args=(message,))
     server_process = Process(target=server.serve)
     # How do I get events out?
     server_process.start()
