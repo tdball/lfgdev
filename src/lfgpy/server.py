@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import sys
 from socketserver import BaseRequestHandler, TCPServer
-from threading import Thread
 
 from lfgpy.config import HOST
 from lfgpy.message import Message, MessageKind
@@ -47,10 +46,6 @@ def main() -> None:
             logger.info("Starting server...")
             logger.info(f"Listening on {HOST}...")
             server.serve_forever()
-            # thread = Thread(target=server.serve_forever, daemon=True)
-            # thread.start()
-            # logger.info(f"Listening on {HOST}")
-            # thread.join()
         except KeyboardInterrupt:
             logger.info("Shutting down...")
 
