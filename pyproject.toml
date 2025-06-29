@@ -15,4 +15,9 @@ lfg-server = "lfgpy.server:main"
 lfg-client = "lfgpy.client:main"
 
 [dependency-groups]
-dev = ["mypy>=1.16.1", "pytest>=8.4.1", "ruff>=0.12.0"]
+dev = [
+    "ipython>=9.3.0",
+    "mypy>=1.16.1",
+ "pytest>=8.4.1",
+ "ruff>=0.12.0",
+]

@@ -44,5 +44,5 @@ class Client:
 
 def main() -> None:
     with Client() as client:
-        message = Message(identifier=uuid4(), type=MessageType.HELLO)
+        message = Message(type=MessageType.HELLO)
         client.send_message(message=message)

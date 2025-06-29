@@ -42,7 +42,9 @@ class RequestHandler(BaseRequestHandler):
             terminated = TERMINATING_SYMBOL in pieces[-1]
             pending_data = total < chunk
 
+        logger.debug(f"{pieces=}")
         self.data = b"".join(pieces)
+        logger.debug(f"{self.data=}")
         if message := Message.from_bytes(self.data):
             logger.debug(f"Received from {self.client_address[0]}: {message}")
             self.request.sendall(message.to_bytes(terminate=True))
