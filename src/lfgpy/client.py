@@ -3,7 +3,6 @@ import sys
 from dataclasses import dataclass
 from socket import socket
 from typing import Self
-from uuid import uuid4
 
 from lfgpy.config import HOST
 from lfgpy.message import Message, MessageType
