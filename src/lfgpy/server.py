@@ -14,19 +14,30 @@ logger.setLevel(logging.DEBUG)
 
 
 class RequestHandler(BaseRequestHandler):
-    def echo(self, message: Message) -> None:
+    def echo(self, message: Message) -> Message:
         logger.debug(f"From {self.client_address}: {message}")
         logger.debug("Response: ECHO")
-        message.send(socket=self.request, terminate=True)
+        return message
 
-    def route_message(self, message: Message) -> None:
+    def lfg(self, message: Message) -> Message:
+        logger.debug("LETS FRIGGEN GOOOOO")
+        return message
+
+    # Middleware?
+    def route_message(self, message: Message) -> Message:
+        # TODO: Find out how to return the 'match'
         match message.kind:
             case MessageKind.HELLO:
-                self.echo(message)
+                return self.echo(message)
+            case MessageKind.LFG:
+                return self.lfg(message)
+            case _:
+                return Message(kind=MessageKind.MALFORMED)
 
     def handle(self) -> None:
         if message := message_parser(sock=self.request):
-            self.route_message(message)
+            message = self.route_message(message)
+            message.send(socket=self.request, terminate=True)
         else:
             message = Message(kind=MessageKind.MALFORMED)
             logger.debug(f"From {self.client_address}: Malformed message receieved")
@@ -35,7 +46,6 @@ class RequestHandler(BaseRequestHandler):
 
 
 class Server(TCPServer):
-    # TODO: Refactor this to use socket and frozen slotted dataclasses
     allow_reuse_address = True
     allow_reuse_port = True
 

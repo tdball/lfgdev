@@ -17,6 +17,7 @@ HEADER_STRUCT_SIZE = struct.calcsize(HEADER_STRUCT_FORMAT)
 class MessageKind(IntEnum):
     HELLO = 0
     MALFORMED = 1
+    LFG = 2
 
 
 class MessageVersion(IntEnum):

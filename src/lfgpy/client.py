@@ -4,8 +4,6 @@ import sys
 from dataclasses import dataclass, field
 from typing import Self
 
-from typing_extensions import NoReturn
-
 from lfgpy.config import HOST
 from lfgpy.message import Message, MessageKind
 from lfgpy.parser import message_parser
@@ -45,13 +43,16 @@ def main() -> None:
         match input("Press Enter to continue..."):
             case "":
                 message = Message(kind=MessageKind.HELLO)
-                with Client() as client:
-                    if response := client.send(message):
-                        if response.kind == MessageKind.MALFORMED:
-                            logger.error("Malformed Message Sent")
+            case "0"|"1"|"2" as kind:
+                message = Message(kind=MessageKind(int(kind)))
             case _:
                 logger.debug("Unsupported input")
                 return
+
+        with Client() as client:
+            if response := client.send(message):
+                if response.kind == MessageKind.MALFORMED:
+                    logger.error("Malformed Message Sent")
 
     while True:
         try:
