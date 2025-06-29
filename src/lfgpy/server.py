@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import logging
 import sys
 from dataclasses import dataclass
 from socketserver import BaseRequestHandler, TCPServer
 from threading import Thread
+from typing import Self
 
 from lfgpy.config import HOST
 from lfgpy.message import TERMINATING_SYMBOL, Message
@@ -14,14 +17,41 @@ logger.setLevel(logging.DEBUG)
 
 @dataclass(frozen=True, slots=True)
 class Server:
-    def __enter__(self) -> None:
-        pass
+    tcp: TCPServer
 
-    def __exit__(self) -> None:
-        pass
+    def __enter__(self) -> Self:
+        # self.tcp.server_bind()
+        # self.tcp.server_activate()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.tcp.server_close()
+        self.tcp.shutdown()
+
+    @staticmethod
+    def with_address(host: str, port: int) -> Server:
+        tcp = TCPServer(
+            server_address=(host, port),
+            RequestHandlerClass=RequestHandler,
+            bind_and_activate=True,
+        )
+        return Server(tcp=tcp)
+
+    def serve(self) -> None:
+        logger.info("Starting server...")
+        thread = Thread(target=self.tcp.serve_forever, daemon=False)
+        thread.start()
+        logger.info(f"Listening on {HOST}")
+        thread.join()
 
 
 class RequestHandler(BaseRequestHandler):
+    @staticmethod
+    def terminated(data: bytes) -> bool:
+        _terminated = TERMINATING_SYMBOL in data
+        logger.debug(f"Terminating byte present?: {_terminated}")
+        return _terminated
+
     def handle(self) -> None:
         total = 0
         chunk = 10_000
@@ -29,37 +59,24 @@ class RequestHandler(BaseRequestHandler):
         pending_data = total < chunk
 
         pieces = [b""]
-        terminated = TERMINATING_SYMBOL in pieces[-1]
-        while not terminated and pending_data:
+        while not RequestHandler.terminated(pieces[-1]) and pending_data:
             logger.debug("Processing packet")
-            logger.debug(f"Terminating byte present {terminated}")
             piece = self.request.recv(packet)
-            logger.debug(piece)
             pieces.append(piece)
             total += len(pieces[-1])
-
-            # This is why it was in the while loop
-            terminated = TERMINATING_SYMBOL in pieces[-1]
             pending_data = total < chunk
 
-        logger.debug(f"{pieces=}")
         self.data = b"".join(pieces)
-        logger.debug(f"{self.data=}")
         if message := Message.from_bytes(self.data):
             logger.debug(f"Received from {self.client_address[0]}: {message}")
-            self.request.sendall(message.to_bytes(terminate=True))
+            message.send(socket=self.request, terminate=True)
         else:
             self.request.sendall(TERMINATING_SYMBOL)
 
 
 def main() -> None:
-    server = TCPServer(
-        server_address=HOST, RequestHandlerClass=RequestHandler, bind_and_activate=True
-    )
-    logger.info(f"Server started on {HOST}")
-    server_thread = Thread(target=server.serve_forever, daemon=False)
-    try:
-        server_thread.start()
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-        server.shutdown()
+    with Server.with_address(host=HOST[0], port=HOST[1]) as server:
+        try:
+            server.serve()
+        except KeyboardInterrupt:
+            logger.info("Shutting down...")

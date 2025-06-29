@@ -5,7 +5,7 @@ from socket import socket
 from typing import Self
 
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageType
+from lfgpy.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -17,31 +17,31 @@ class Client:
     _socket = socket()
 
     def __enter__(self) -> Self:
-        self.connect()
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
-        self.disconnect()
-
-    def connect(self) -> None:
         logger.debug(f"Connecting to {HOST}")
         self._socket.connect(HOST)
         logger.debug("Connected")
+        return self
 
-    def disconnect(self) -> None:
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
         logger.debug(f"Shutting down connection to {HOST}")
         self._socket.close()
         logger.debug("Connection closed")
 
     def send_message(self, message: Message) -> None:
         logger.debug(f"Sending Message: {message}")
-        self._socket.send(message.to_bytes(terminate=True))
-        data = self._socket.recv(10_000)
+        message.send(socket=self._socket, terminate=True)
+        # FIXME: This doesn't clear after the first recv, empty the socket... buffer?
+        data = self._socket.recv(28)
         if response := Message.from_bytes(data):
             logger.debug(f"Response: {response}")
 
 
 def main() -> None:
     with Client() as client:
-        message = Message(type=MessageType.HELLO)
-        client.send_message(message=message)
+        while True:
+            match input("Continue?: ").lower():
+                case "y":
+                    message = Message(kind=MessageKind.HELLO)
+                    client.send_message(message=message)
+                case _:
+                    break
