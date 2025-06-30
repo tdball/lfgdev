@@ -2,56 +2,69 @@ from __future__ import annotations
 
 import logging
 import struct
+import io
+from socket import socket
 from dataclasses import dataclass, field
 from enum import IntEnum
-from socket import socket
+from typing import ClassVar
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
 TERMINATING_SYMBOL = b"\n"
-HEADER_STRUCT_FORMAT = "@Ix16sxI"
-HEADER_STRUCT_SIZE = struct.calcsize(HEADER_STRUCT_FORMAT)
-
-
 class MessageKind(IntEnum):
     HELLO = 0
-    MALFORMED = 1
-    LFG = 2
-
-
-class MessageVersion(IntEnum):
-    V1 = 0
+    NO_HELLO = 1
+    MALFORMED = 2
+    LFG = 3
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Message:
-    version: MessageVersion = field(default=MessageVersion.V1)
+    header_struct: ClassVar[struct.Struct] = struct.Struct(format="!16sxI")
+    body_struct: ClassVar[struct.Struct] = struct.Struct(format="!140s")
     identifier: UUID = field(default_factory=uuid4)
     kind: MessageKind
+    body: bytes = field(default_factory=lambda: b"0" * Message.body_struct.size)
 
-    def send(self, socket: socket, terminate: bool = False) -> None:
-        payload = bytes(self)
-        if terminate:
-            payload += TERMINATING_SYMBOL
-        socket.sendall(payload)
-
-    def __bytes__(self) -> bytes:
-        return struct.pack(
-            HEADER_STRUCT_FORMAT, self.version, self.identifier.bytes, self.kind
-        )
+    def encode(self) -> bytes:
+        data = Message.header_struct.pack(self.identifier.bytes, self.kind)
+        data += Message.body_struct.pack(self.body)
+        data += TERMINATING_SYMBOL
+        return data
 
     @staticmethod
-    def from_bytes(payload: bytes) -> Message | None:
-        logger.debug(f"Converting to Message from bytes: {payload=}")
+    def decode(data: bytes) -> Message | None:
+        logger.debug(f"Converting to Message from bytes: {data=}")
         try:
-            payload = payload[:HEADER_STRUCT_SIZE]
-            data = struct.unpack(HEADER_STRUCT_FORMAT, payload)
+            header = Message.header_struct.unpack_from(data, offset=0)
+            body = Message.body_struct.unpack_from(data, offset=Message.header_struct.size)
             return Message(
-                version=MessageVersion(data[0]),
-                identifier=UUID(bytes=data[1]),
-                kind=MessageKind(data[2]),
+                identifier=UUID(bytes=header[0]),
+                kind=MessageKind(header[1]),
+                body=body[0]
             )
         except Exception as e:
             logger.exception(e)
             return None
+
+def terminated(data: bytes) -> bool:
+    is_terminated = TERMINATING_SYMBOL in data
+    logger.debug(f"bytes: {data!r}")
+    logger.debug(f"Terminated: {is_terminated}")
+    return is_terminated
+
+
+# Does this belong on the Message class?
+def get_message(dest: socket) -> Message | None:
+    chunk = Message.header_struct.size + Message.body_struct.size
+    with io.BytesIO() as buffer:
+        data: bytes = dest.recv(chunk)
+        buffer.write(data)
+        while not terminated(data):
+            data: bytes = dest.recv(chunk)
+            buffer.write(data)
+        else:
+            data = buffer.getvalue()
+            logger.debug(f"{data=}")
+            return Message.decode(data)

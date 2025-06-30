@@ -5,14 +5,12 @@ import pytest
 
 from lfgpy.client import Client
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind
 from lfgpy.server import RequestHandler, Server
 
 
 @pytest.fixture
-def client() -> Generator[Client, None, None]:
-    with Client() as client:
-        yield client
+def client() -> Client:
+    return Client()
 
 
 @pytest.fixture
@@ -23,8 +21,7 @@ def server() -> Generator[Server, None, None]:
 
 @pytest.mark.integration
 def test_server_client_message_passing(server: Server, client: Client) -> None:
-    message = Message(kind=MessageKind.HELLO)
-    client_process = Process(target=client.send, args=(message,))
+    client_process = Process(target=client.say_hello)
     server_process = Process(target=server.serve_forever)
     # How do I get events out?
     server_process.start()
