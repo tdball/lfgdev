@@ -11,8 +11,6 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
-TERMINATING_SYMBOL = b"\n"
-
 
 class MessageKind(IntEnum):
     HELLO = 0
@@ -23,6 +21,7 @@ class MessageKind(IntEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Message:
+    terminating_symbol: ClassVar[bytes] = b'\n'
     header_struct: ClassVar[struct.Struct] = struct.Struct(format="!16sxI")
     body_struct: ClassVar[struct.Struct] = struct.Struct(format="!140s")
     identifier: UUID = field(default_factory=uuid4)
@@ -32,7 +31,7 @@ class Message:
     def encode(self) -> bytes:
         data = Message.header_struct.pack(self.identifier.bytes, self.kind)
         data += Message.body_struct.pack(self.body)
-        data += TERMINATING_SYMBOL
+        data += Message.terminating_symbol
         return data
 
     @staticmethod
@@ -54,7 +53,7 @@ class Message:
 
 
 def terminated(data: bytes) -> bool:
-    is_terminated = TERMINATING_SYMBOL in data
+    is_terminated = Message.terminating_symbol in data
     logger.debug(f"bytes: {data!r}")
     logger.debug(f"Terminated: {is_terminated}")
     return is_terminated
