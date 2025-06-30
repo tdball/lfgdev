@@ -14,15 +14,15 @@ def client() -> Client:
     return Client()
 
 
-@pytest.fixture
-def server() -> Generator[Server, None, None]:
+@pytest.fixture(autouse=True)
+def server() -> Generator[None, None, None]:
     with Server(HOST, RequestHandler, bind_and_activate=True) as server:
-        yield server
+        server_thread = Thread(target=server.serve_forever, daemon=True)
+        server_thread.start()
+        yield
 
 
 @pytest.mark.integration
-def test_server_client_message_passing(server: Server, client: Client) -> None:
-    server_thread = Thread(target=server.serve_forever, daemon=True)
-    server_thread.start()
+def test_server_client_message_passing(client: Client) -> None:
     if response := client.say_hello():
         assert response.kind == MessageKind.NO_HELLO
