@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import io
 import logging
 import struct
-import io
-from socket import socket
 from dataclasses import dataclass, field
 from enum import IntEnum
+from socket import socket
 from typing import ClassVar
 from uuid import UUID, uuid4
 
