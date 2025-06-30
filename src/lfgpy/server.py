@@ -37,14 +37,17 @@ class RequestHandler(BaseRequestHandler):
                 return Message(kind=MessageKind.MALFORMED)
 
     def handle(self) -> None:
+        logger.debug(
+            f"Incoming Message from {self.client_address[0]}:{self.client_address[1]}"
+        )
         if message := get_message(self.request):
             message = self.route_message(message)
-            self.request.sendall(message.encode())
         else:
             message = Message(kind=MessageKind.MALFORMED)
             logger.debug(f"From {self.client_address}: Malformed message receieved")
-            logger.debug(f"Response: {message}")
-            self.request.sendall(message.encode())
+
+        logger.debug(f"Response: {message}")
+        self.request.sendall(message.encode())
 
 
 class Server(TCPServer):

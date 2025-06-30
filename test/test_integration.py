@@ -1,10 +1,10 @@
+import json
 import logging
 import time
 from threading import Thread
 from typing import Generator
 
 import pytest
-import json
 
 from lfgpy.client import Client
 from lfgpy.config import HOST
