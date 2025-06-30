@@ -21,7 +21,7 @@ class MessageKind(IntEnum):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Message:
-    terminating_symbol: ClassVar[bytes] = b'\n'
+    terminating_symbol: ClassVar[bytes] = b"\n"
     header_struct: ClassVar[struct.Struct] = struct.Struct(format="!16sxI")
     body_struct: ClassVar[struct.Struct] = struct.Struct(format="!140s")
     identifier: UUID = field(default_factory=uuid4)
