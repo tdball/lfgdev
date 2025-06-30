@@ -1,9 +1,10 @@
-from multiprocessing import Process
 from typing import Generator
+from threading import Thread
 
 import pytest
 
 from lfgpy.client import Client
+from lfgpy.message import MessageKind
 from lfgpy.config import HOST
 from lfgpy.server import RequestHandler, Server
 
@@ -21,11 +22,7 @@ def server() -> Generator[Server, None, None]:
 
 @pytest.mark.integration
 def test_server_client_message_passing(server: Server, client: Client) -> None:
-    client_process = Process(target=client.say_hello)
-    server_process = Process(target=server.serve_forever)
-    # How do I get events out?
-    server_process.start()
-    client_process.start()
-
-    client_process.kill()
-    server_process.kill()
+    server_thread = Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+    if response := client.say_hello():
+        assert response.kind == MessageKind.NO_HELLO

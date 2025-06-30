@@ -60,7 +60,6 @@ def terminated(data: bytes) -> bool:
     return is_terminated
 
 
-# Does this belong on the Message class?
 def get_message(dest: socket) -> Message | None:
     chunk = Message.header_struct.size + Message.body_struct.size
     with io.BytesIO() as buffer:

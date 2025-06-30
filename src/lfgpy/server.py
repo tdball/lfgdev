@@ -22,12 +22,15 @@ class RequestHandler(BaseRequestHandler):
         logger.debug("LETS FRIGGEN GOOOOO")
         return message
 
+    def say_no_hello(self) -> Message:
+        return Message(kind=MessageKind.NO_HELLO)
+
     # Middleware?
     def route_message(self, message: Message) -> Message:
         # TODO: Find out how to return the 'match'
         match message.kind:
             case MessageKind.HELLO:
-                return self.echo(message)
+                return self.say_no_hello()
             case MessageKind.LFG:
                 return self.lfg(message)
             case _:
