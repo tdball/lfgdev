@@ -17,8 +17,7 @@ def client() -> Client:
 @pytest.fixture(autouse=True)
 def server() -> Generator[None, None, None]:
     with Server(HOST, RequestHandler, bind_and_activate=True) as server:
-        server_thread = Thread(target=server.serve_forever, daemon=True)
-        server_thread.start()
+        Thread(target=server.serve_forever, daemon=True).start()
         yield
 
 
