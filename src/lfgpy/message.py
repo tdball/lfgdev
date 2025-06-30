@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 logger = logging.getLogger(__name__)
 
 TERMINATING_SYMBOL = b"\n"
+
+
 class MessageKind(IntEnum):
     HELLO = 0
     NO_HELLO = 1
@@ -38,15 +40,18 @@ class Message:
         logger.debug(f"Converting to Message from bytes: {data=}")
         try:
             header = Message.header_struct.unpack_from(data, offset=0)
-            body = Message.body_struct.unpack_from(data, offset=Message.header_struct.size)
+            body = Message.body_struct.unpack_from(
+                data, offset=Message.header_struct.size
+            )
             return Message(
                 identifier=UUID(bytes=header[0]),
                 kind=MessageKind(header[1]),
-                body=body[0]
+                body=body[0],
             )
         except Exception as e:
             logger.exception(e)
             return None
+
 
 def terminated(data: bytes) -> bool:
     is_terminated = TERMINATING_SYMBOL in data
@@ -62,7 +67,7 @@ def get_message(dest: socket) -> Message | None:
         data: bytes = dest.recv(chunk)
         buffer.write(data)
         while not terminated(data):
-            data: bytes = dest.recv(chunk)
+            data = dest.recv(chunk)
             buffer.write(data)
         else:
             data = buffer.getvalue()

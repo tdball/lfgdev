@@ -30,5 +30,6 @@ def main() -> None:
     client = Client()
     client.say_hello()
 
+
 if __name__ == "__main__":
     main()
