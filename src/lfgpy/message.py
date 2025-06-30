@@ -6,7 +6,7 @@ import struct
 from dataclasses import dataclass, field
 from enum import IntEnum
 from socket import socket
-from typing import ClassVar
+from typing import Callable, ClassVar, TypeAlias
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
@@ -51,23 +51,21 @@ class Message:
             logger.exception(e)
             return None
 
-
-def terminated(data: bytes) -> bool:
-    is_terminated = Message.terminating_symbol in data
-    logger.debug(f"bytes: {data!r}")
-    logger.debug(f"Terminated: {is_terminated}")
-    return is_terminated
-
-
-def get_message(dest: socket) -> Message | None:
-    chunk = Message.header_struct.size + Message.body_struct.size
-    with io.BytesIO() as buffer:
-        data: bytes = dest.recv(chunk)
-        buffer.write(data)
-        while not terminated(data):
-            data = dest.recv(chunk)
+    @staticmethod
+    def get_from(dest: socket) -> Message | None:
+        chunk = (
+            Message.header_struct.size + Message.body_struct.size + 1
+        )  # Account for b'\n'
+        with io.BytesIO() as buffer:
+            data: bytes = dest.recv(chunk)
             buffer.write(data)
-        else:
-            data = buffer.getvalue()
-            logger.debug(f"{data=}")
-            return Message.decode(data)
+            while not Message.terminating_symbol in data:
+                data = dest.recv(chunk)
+                buffer.write(data)
+            else:
+                data = buffer.getvalue()
+                logger.debug(f"{data=}")
+                return Message.decode(data)
+
+
+MessageHandler: TypeAlias = Callable[[Message], Message]

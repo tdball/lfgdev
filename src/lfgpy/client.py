@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import NewType
 
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind, get_message
+from lfgpy.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -28,7 +28,7 @@ class Client:
         with self._socket as s:
             message = Message(kind=MessageKind.HELLO)
             s.sendall(message.encode())
-            if response := get_message(self._socket):
+            if response := Message.get_from(self._socket):
                 logger.debug(f"Response: {response}")
                 return response
             return None
