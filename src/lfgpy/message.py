@@ -52,23 +52,12 @@ class Message:
     kind: MessageKind
     value: int = field(default=MessageValue.UNSET)
 
-    def encode(self) -> bytes:
-        message = Message._STRUCT.pack(
-            Message._encoder(self.identifier),
-            Message._encoder(self.kind),
-            Message._encoder(self.value),
-        )
-        return message + Message._TERMINATING_SYMBOL
-
-    @classmethod
-    def decode(cls, bytes: Buffer) -> Message:
-        message = Message._STRUCT.unpack_from(bytes, offset=0)
-        identifier = UUID(bytes=message[0])
-        kind = MessageKind(message[1])
-        # Consider handling the lookup here. Maybe that map belongs here
-        # instead of router?
-        value = message[2]
-        return Message(identifier=identifier, kind=kind, value=value)
+    @staticmethod
+    def _get_value_for_kind(kind: MessageKind) -> type[IntEnum]:
+        mapping: dict[MessageKind, type[IntEnum]] = {
+            MessageKind.HELLO: HelloValue,
+        }
+        return mapping[kind]
 
     @staticmethod
     def from_socket(dest: socket) -> Message | None:
@@ -83,5 +72,27 @@ class Message:
                 logger.debug(f"{data=}")
                 return Message.decode(data)
 
+    @classmethod
+    def decode(cls, bytes: Buffer) -> Message:
+        message = Message._STRUCT.unpack_from(bytes, offset=0)
+        identifier = UUID(bytes=message[0])
+        kind = MessageKind(message[1])
+        # Consider handling the lookup here. Maybe that map belongs here
+        # instead of router?
+        value_enum = Message._get_value_for_kind(kind)
+        value = value_enum(message[2])
+        return Message(identifier=identifier, kind=kind, value=value)
+
+    def encode(self) -> bytes:
+        message = Message._STRUCT.pack(
+            Message._encoder(self.identifier),
+            Message._encoder(self.kind),
+            Message._encoder(self.value),
+        )
+        return message + Message._TERMINATING_SYMBOL
+
     def with_value(self, value: int) -> Message:
-        return Message(identifier=self.identifier, kind=self.kind, value=value)
+        value_enum = Message._get_value_for_kind(self.kind)
+        return Message(
+            identifier=self.identifier, kind=self.kind, value=value_enum(value)
+        )
