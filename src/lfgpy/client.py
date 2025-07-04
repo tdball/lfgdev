@@ -27,8 +27,9 @@ class Client:
     def say_hello(self) -> Message | None:
         with self._socket as s:
             message = Message(kind=MessageKind.HELLO)
+            logger.debug(f"Request: {message}")
             s.sendall(message.encode())
-            if response := Message.get_from(self._socket):
+            if response := Message.from_socket(self._socket):
                 logger.debug(f"Response: {response}")
                 return response
             return None

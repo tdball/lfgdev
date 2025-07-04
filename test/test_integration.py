@@ -8,7 +8,7 @@ import pytest
 
 from lfgpy.client import Client
 from lfgpy.config import HOST
-from lfgpy.message import MessageKind
+from lfgpy.message import MessageKind, MessageValue
 from lfgpy.server import RequestHandler, Server
 
 
@@ -28,6 +28,7 @@ def server() -> Generator[None, None, None]:
 def test_server_client_message_passing(client: Client) -> None:
     if response := client.say_hello():
         assert response.kind == MessageKind.NO_HELLO
+        assert response.value == MessageValue.COMPUTER_SAYS_NO
 
 
 @pytest.mark.profiling

@@ -2,64 +2,97 @@ from __future__ import annotations
 
 import io
 import logging
-import struct
+from collections.abc import Buffer
 from dataclasses import dataclass, field
-from enum import IntEnum
+from enum import IntEnum, auto
 from socket import socket
-from typing import Callable, ClassVar, TypeAlias
+from struct import Struct
+from typing import Any, Callable, ClassVar, TypeAlias
 from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
+# Would life be simpler if the "body"
+# were just a series of integers mapped to
+# enums? ID -> Kind -> Value, like Kind would influence
+# which Value to infer from an enum
+# uuid:HELLO:update? Where do we draw the lines, arguments
+# matter?? standardize those?!?!?!?!?!?! I guess we always
+# take a message in to the message handler, where this ultimately
+# ends up, but that was always ambiguous.
+
 
 class MessageKind(IntEnum):
-    HELLO = 0
-    NO_HELLO = 1
-    MALFORMED = 2
-    LFG = 3
+    HEADER = auto()
+    HELLO = auto()
+    NO_HELLO = auto()
+    MALFORMED = auto()
+    LFG = auto()
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+class MessageValue(IntEnum):
+    UNSET = auto()
+    COMPUTER_SAYS_NO = auto()
+
+
+# str is out of scope, gonna keep life simple with integers for now
+def _to_bytes(value: Any) -> int | bytes:
+    match value:
+        case UUID():
+            return value.bytes
+        case MessageKind() | int():
+            return value
+        case _:
+            raise ValueError(f"Unsupported type for encoding: {type(value)}")
+
+
+@dataclass(slots=True, frozen=True, kw_only=True)
 class Message:
-    terminating_symbol: ClassVar[bytes] = b"\n"
-    header_struct: ClassVar[struct.Struct] = struct.Struct(format="!16sxI")
-    body_struct: ClassVar[struct.Struct] = struct.Struct(format="!140s")
+    TERMINATING_SYMBOL: ClassVar[bytes] = b"\n"
+    STRUCT: ClassVar[Struct] = Struct(format="!16sxIxI")
+    _encoder: ClassVar[Callable[[Any], int | bytes]] = field(default=_to_bytes)
+
     identifier: UUID = field(default_factory=uuid4)
     kind: MessageKind
-    body: bytes = field(default_factory=lambda: b"0" * Message.body_struct.size)
+    value: MessageValue = field(default=MessageValue.UNSET)
 
     def encode(self) -> bytes:
-        data = Message.header_struct.pack(self.identifier.bytes, self.kind)
-        data += Message.body_struct.pack(self.body)
-        data += Message.terminating_symbol
-        return data
+        message = Message.STRUCT.pack(
+            Message._encoder(self.identifier),
+            Message._encoder(self.kind),
+            Message._encoder(self.value),
+        )
+        return message + Message.TERMINATING_SYMBOL
+
+    @classmethod
+    def decode(cls, bytes: Buffer) -> Message:
+        message = Message.STRUCT.unpack_from(bytes, offset=0)
+        identifier = UUID(bytes=message[0])
+        kind = MessageKind(message[1])
+        # Only handling HELLO for now, but this should be pulled out
+        match kind:
+            case MessageKind.HELLO:
+                return Message(
+                    identifier=identifier, kind=kind, value=MessageValue.UNSET
+                )
+            case MessageKind.NO_HELLO:
+                return Message(
+                    identifier=identifier,
+                    kind=kind,
+                    value=MessageValue.COMPUTER_SAYS_NO,
+                )
+            case _:
+                raise NotImplementedError(
+                    f"No decoding implemented for message kind: {kind}"
+                )
 
     @staticmethod
-    def decode(data: bytes) -> Message | None:
-        logger.debug(f"Converting to Message from bytes: {data=}")
-        try:
-            header = Message.header_struct.unpack_from(data, offset=0)
-            body = Message.body_struct.unpack_from(
-                data, offset=Message.header_struct.size
-            )
-            return Message(
-                identifier=UUID(bytes=header[0]),
-                kind=MessageKind(header[1]),
-                body=body[0],
-            )
-        except Exception as e:
-            logger.exception(e)
-            return None
-
-    @staticmethod
-    def get_from(dest: socket) -> Message | None:
-        chunk = (
-            Message.header_struct.size + Message.body_struct.size + 1
-        )  # Account for b'\n'
+    def from_socket(dest: socket) -> Message | None:
+        chunk = Message.STRUCT.size + len(Message.TERMINATING_SYMBOL)
         with io.BytesIO() as buffer:
             data: bytes = dest.recv(chunk)
             buffer.write(data)
-            while not Message.terminating_symbol in data:
+            while not Message.TERMINATING_SYMBOL in data:
                 data = dest.recv(chunk)
                 buffer.write(data)
             else:

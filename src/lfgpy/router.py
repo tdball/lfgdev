@@ -2,23 +2,17 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import ClassVar
 
-from lfgpy.message import Message, MessageHandler, MessageKind
+from lfgpy.message import Message, MessageHandler, MessageKind, MessageValue
 
 logger = logging.getLogger(__name__)
 
 
-def say_hello(message: Message) -> Message:
-    return Message(kind=MessageKind.NO_HELLO)
-
-
-def lfg(message: Message) -> Message:
-    logger.debug("LETS FRIGGEN GOOOOO")
-    return message
-
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Router:
+    terminating_symbol: ClassVar[bytes] = b"\n"
+
     middleware: list[MessageHandler] = field(default_factory=list)
 
     # Consider, auth should be an explicit middleware so types
@@ -37,7 +31,11 @@ class Router:
         match kind:
             case MessageKind.HELLO:
                 # FIXME: Don't love how implicit say_hello is the handler in the middleware, revisit this
-                router.add_middleware(say_hello)
+                router.add_middleware(
+                    lambda message: Message(
+                        kind=MessageKind.NO_HELLO, value=MessageValue.UNSET
+                    )
+                )
             case MessageKind.LFG:
 
                 def lfg(message: Message):
@@ -47,7 +45,9 @@ class Router:
                 router.add_middleware(lfg)
             case _:
                 router.add_middleware(
-                    lambda message: Message(kind=MessageKind.MALFORMED)
+                    lambda message: Message(
+                        kind=MessageKind.MALFORMED, value=MessageValue.UNSET
+                    )
                 )
 
         return router

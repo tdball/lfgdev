@@ -18,7 +18,7 @@ class RequestHandler(BaseRequestHandler):
         logger.debug(
             f"Incoming Message from {self.client_address[0]}:{self.client_address[1]}"
         )
-        if message := Message.get_from(self.request):
+        if message := Message.from_socket(self.request):
             router = Router.for_message_kind(message.kind)
             message = router.apply(message)
         else:

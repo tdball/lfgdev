@@ -1,7 +1,13 @@
-from lfgpy.message import Message, MessageKind
+import pytest
+
+from lfgpy.message import Message, MessageKind, MessageValue
 
 
-def test_conversion() -> None:
-    message = Message(kind=MessageKind.HELLO)
-    as_bytes = message.encode()
-    assert message == Message.decode(as_bytes)
+@pytest.fixture
+def message() -> Message:
+    return Message(kind=MessageKind.HELLO, value=MessageValue.UNSET)
+
+
+def test_conversion(message: Message) -> None:
+    bytes = message.encode()
+    assert Message.decode(bytes) == message
