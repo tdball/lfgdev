@@ -4,10 +4,11 @@ import logging
 import sys
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Self
+from uuid import uuid4
 
 import lfgpy.router as router
 from lfgpy.config import HOST
-from lfgpy.message import HelloValue, Message, MessageKind
+from lfgpy.message import Message, MessageKind, MessageValue
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -16,15 +17,18 @@ logger.setLevel(logging.DEBUG)
 
 class RequestHandler(BaseRequestHandler):
     def handle(self) -> None:
-        logger.debug(
-            f"Incoming Message from {self.client_address[0]}:{self.client_address[1]}"
-        )
+        client, port = self.client_address
+        logger.debug(f"Message from {client}:{port}")
         if message := Message.from_socket(self.request):
             message = router.authenticate_message(message)
             message = router.handle_message(message)
         else:
+            # Weird case? Should I instead just throw an exception?
+            # I'm not sure it makes sense for the user to have a UUID
             message = Message(
-                kind=MessageKind.MALFORMED, value=HelloValue.COMPUTER_SAYS_NO
+                user_id=uuid4(),
+                kind=MessageKind.MALFORMED,
+                value=MessageValue.COMPUTER_SAYS_NO,
             )
             logger.debug(f"From {self.client_address}: Malformed message receieved")
 
