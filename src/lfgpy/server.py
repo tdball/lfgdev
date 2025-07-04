@@ -5,7 +5,7 @@ import sys
 from socketserver import BaseRequestHandler, TCPServer
 
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind
+from lfgpy.message import Message, MessageKind, MessageValue
 from lfgpy.router import Router
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,9 @@ class RequestHandler(BaseRequestHandler):
             router = Router.for_message_kind(message.kind)
             message = router.apply(message)
         else:
-            message = Message(kind=MessageKind.MALFORMED)
+            message = Message(
+                kind=MessageKind.MALFORMED, value=MessageValue.COMPUTER_SAYS_NO
+            )
             logger.debug(f"From {self.client_address}: Malformed message receieved")
 
         logger.debug(f"Response: {message}")

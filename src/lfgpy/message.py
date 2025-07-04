@@ -12,14 +12,7 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger(__name__)
 
-# Would life be simpler if the "body"
-# were just a series of integers mapped to
-# enums? ID -> Kind -> Value, like Kind would influence
-# which Value to infer from an enum
-# uuid:HELLO:update? Where do we draw the lines, arguments
-# matter?? standardize those?!?!?!?!?!?! I guess we always
-# take a message in to the message handler, where this ultimately
-# ends up, but that was always ambiguous.
+# We're all just integers
 
 
 class MessageKind(IntEnum):
