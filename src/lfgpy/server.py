@@ -5,15 +5,13 @@ import sys
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Self
 
+import lfgpy.router as router
 from lfgpy.config import HOST
 from lfgpy.message import HelloValue, Message, MessageKind
-from lfgpy.router import Router
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
-
-router = Router()
 
 
 class RequestHandler(BaseRequestHandler):
