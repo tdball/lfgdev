@@ -38,7 +38,7 @@ class Database:
     def add_player(self, username: Username) -> None:
         with sqlite3.connect(self.path) as conn:
             statement = """
-                INSERT OR REPLACE INTO lfg VALUES(
+                INSERT INTO lfg VALUES(
                     :username,
                     :last_seen
                 )
