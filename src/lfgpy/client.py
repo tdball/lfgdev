@@ -12,12 +12,20 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
 
+"""
+Mutable container for metadata stored on an instance of Client
+"""
+@dataclass(frozen=False, slots=True, kw_only=True)
+class ClientMetadata:
+    messages_sent: int = 0
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Client:
     # Maybe combo of FriendlyName and number? Name#1234?
     # What if just string??
     user_id: UUID
-    sent_messages: list[UUID] = field(default_factory=list)
+    metadata: ClientMetadata = field(default_factory=ClientMetadata)
 
     def connect(self) -> socket.socket:
         sock = socket.socket()
@@ -30,7 +38,7 @@ class Client:
             host, port = sock.getpeername()
             logger.debug(f"Request: {message}")
             sock.sendall(message.encode())
-            self.sent_messages.append(message.identifier)
+            self.metadata.messages_sent += 1
             if response := Message.from_socket(sock):
                 logger.debug(f"Response from {host}:{port} - {response}")
                 return response
@@ -41,12 +49,12 @@ class Client:
         return self.send_message(MessageKind.HELLO)
 
     def login(self) -> Message:
-        return self.send_message(MessageKind.CLIENT)
+        return self.send_message(MessageKind.LOGIN)
 
 
 def main() -> None:
     client = Client(user_id=uuid4())
-    client.say_hello()
+    client.send_message(MessageKind.HELLO)
 
 
 if __name__ == "__main__":

@@ -15,17 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class MessageKind(IntEnum):
+    COMPUTER_SAYS_NO = auto()
     HELLO = auto()
     NO_HELLO = auto()
     MALFORMED = auto()
     LFG = auto()
-    CLIENT = auto()
-    SERVER = auto()
-
-
-class MessageValue(IntEnum):
-    UNSET = auto()
-    COMPUTER_SAYS_NO = auto()
     LOGIN = auto()  # Placeholder? Just testing client interactions
 
 
@@ -42,7 +36,7 @@ def _to_bytes(value: Any) -> int | bytes:
 @dataclass(slots=True, frozen=True, kw_only=True)
 class Message:
     _TERMINATING_SYMBOL: ClassVar[bytes] = b"\n"
-    _STRUCT: ClassVar[Struct] = Struct(format="!16sx16sxIxI")
+    _STRUCT: ClassVar[Struct] = Struct(format="!16sx16sxI")
     _CHUNK_SIZE: ClassVar[int] = _STRUCT.size + len(_TERMINATING_SYMBOL)
     _encoder: ClassVar[Callable[[Any], int | bytes]] = field(default=_to_bytes)
 
@@ -51,7 +45,6 @@ class Message:
     identifier: UUID = field(default_factory=uuid4)
     user_id: UUID
     kind: MessageKind
-    value: MessageValue = field(default=MessageValue.UNSET)
 
     @staticmethod
     def from_socket(dest: socket) -> Message | None:
@@ -72,22 +65,17 @@ class Message:
         identifier = UUID(bytes=message[0])
         user_id = UUID(bytes=message[1])
         kind = MessageKind(message[2])
-        # Using simple approach vs mappings of kinds -> values. This
-        # Ideally won't grow that big, re-evaluate if the MessageValues
-        # Enum gets out of hand
-        value = MessageValue(message[3])
-        return Message(identifier=identifier, user_id=user_id, kind=kind, value=value)
+        return Message(identifier=identifier, user_id=user_id, kind=kind)
 
     def encode(self) -> bytes:
         message = Message._STRUCT.pack(
             Message._encoder(self.identifier),
             Message._encoder(self.user_id),
             Message._encoder(self.kind),
-            Message._encoder(self.value),
         )
         return message + Message._TERMINATING_SYMBOL
 
-    def with_value(self, value: MessageValue) -> Message:
+    def with_kind(self, kind: MessageKind) -> Message:
         """
         Messages are immutable, this generates a new message
         from the existing one, with a value override
@@ -95,6 +83,5 @@ class Message:
         return Message(
             identifier=self.identifier,
             user_id=self.user_id,
-            kind=self.kind,
-            value=value,
+            kind=kind,
         )

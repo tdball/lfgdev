@@ -9,7 +9,7 @@ import pytest
 
 from lfgpy.client import Client
 from lfgpy.config import HOST
-from lfgpy.message import MessageKind, MessageValue
+from lfgpy.message import MessageKind
 from lfgpy.server import RequestHandler, Server
 
 
@@ -21,29 +21,24 @@ def client() -> Client:
 @pytest.fixture(autouse=True)
 def server() -> Generator[None, None, None]:
     with Server(HOST, RequestHandler, bind_and_activate=True) as server:
-        # I think this has a bug, repeated pytest invocations cause failures
-        # Maybe a bug with cleanup after shutting down?
-        #
-        # ConnectionResetError: [Errno 104] Connection reset by peer
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         yield
+        server.shutdown()
 
 
 @pytest.mark.integration
 def test_server_client_message_passing(client: Client) -> None:
-    response = client.say_hello()
-    assert response.identifier == client.sent_messages[0]
-    assert response.kind == MessageKind.HELLO
-    assert response.value == MessageValue.COMPUTER_SAYS_NO
+    response = client.send_message(kind=MessageKind.HELLO)
+    assert response.kind == MessageKind.COMPUTER_SAYS_NO
 
 
 @pytest.mark.integration
 def test_user_persistence(client: Client) -> None:
-    response = client.login()
+    client.login()
     response = client.login()
     assert response.user_id == client.user_id
-    assert len(client.sent_messages) == 2
+    assert client.metadata.messages_sent == 2
 
 
 @pytest.mark.profiling

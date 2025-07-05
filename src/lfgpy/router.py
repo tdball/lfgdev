@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from lfgpy.message import Message, MessageKind, MessageValue
-
+from lfgpy.message import Message, MessageKind
 logger = logging.getLogger(__name__)
 
 
@@ -18,13 +17,9 @@ def handle_message(message) -> Message:
     match message.kind:
         case MessageKind.HELLO:
             logger.debug("HELLO Message")
-            return message.with_value(MessageValue.COMPUTER_SAYS_NO)
+            return message.with_kind(MessageKind.COMPUTER_SAYS_NO)
         case MessageKind.LFG:
             logger.debug("LFG Message")
-        case MessageKind.SERVER:
-            logger.debug("Server Request")
-        case MessageKind.CLIENT:
-            logger.debug("Client Response? Maybe Request?")
         case _:
             logger.debug("No Route Defined")
 

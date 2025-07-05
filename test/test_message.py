@@ -1,15 +1,12 @@
 from uuid import uuid4
 
-import pytest
-
-from lfgpy.message import Message, MessageKind, MessageValue
+from lfgpy.message import Message, MessageKind
 
 
-@pytest.fixture
-def message() -> Message:
-    return Message(kind=MessageKind.HELLO, user_id=uuid4(), value=MessageValue.UNSET)
-
-
-def test_conversion(message: Message) -> None:
+def test_encode_decode() -> None:
+    message = Message(
+        kind=MessageKind.HELLO,
+        user_id=uuid4(),
+    )
     bytes = message.encode()
     assert Message.decode(bytes) == message

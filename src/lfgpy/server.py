@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import lfgpy.router as router
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind, MessageValue
+from lfgpy.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -28,7 +28,6 @@ class RequestHandler(BaseRequestHandler):
             message = Message(
                 user_id=uuid4(),
                 kind=MessageKind.MALFORMED,
-                value=MessageValue.COMPUTER_SAYS_NO,
             )
             logger.debug(f"From {self.client_address}: Malformed message receieved")
 
