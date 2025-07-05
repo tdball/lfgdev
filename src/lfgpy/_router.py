@@ -19,8 +19,9 @@ def authenticate_message(message: Message) -> Message:
 def handle_message(message: Message) -> Message:
     # Definitely not the place to do this
     db = Database(path=Path("/tmp/lfg-test.db"))
-    db.create()
-    db.save_player(message.sent_by)
+    db.setup()
+
+    db.add_player(message.sent_by)
     match message.kind:
         case MessageKind.HELLO:
             logger.debug("HELLO Message")
