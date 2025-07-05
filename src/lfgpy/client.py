@@ -15,6 +15,8 @@ logger.setLevel(logging.DEBUG)
 """
 Mutable container for metadata stored on an instance of Client
 """
+
+
 @dataclass(frozen=False, slots=True, kw_only=True)
 class ClientMetadata:
     messages_sent: int = 0

@@ -13,18 +13,18 @@ from lfgpy.message import MessageKind
 from lfgpy.server import RequestHandler, Server
 
 
-@pytest.fixture
-def client() -> Client:
-    return Client(user_id=uuid4())
-
-
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def server() -> Generator[None, None, None]:
     with Server(HOST, RequestHandler, bind_and_activate=True) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         yield
         server.shutdown()
+
+
+@pytest.fixture
+def client() -> Client:
+    return Client(user_id=uuid4())
 
 
 @pytest.mark.integration
