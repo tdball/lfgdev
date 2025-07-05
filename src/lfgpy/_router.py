@@ -20,8 +20,12 @@ def handle_message(message: Message) -> Message:
     # Definitely not the place to do this
     db = Database(path=Path("/tmp/lfg-test.db"))
     db.setup()
+    if db.get_player(message.sent_by) is None:
+        db.add_player(message.sent_by)
+    else:
+        # TODO: Add an "update" method
+        pass
 
-    db.add_player(message.sent_by)
     match message.kind:
         case MessageKind.HELLO:
             logger.debug("HELLO Message")
