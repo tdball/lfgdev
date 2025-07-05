@@ -41,10 +41,8 @@ def test_user_persistence(client: Client) -> None:
 
 @pytest.mark.profiling
 def test_throughput(client: Client) -> None:
-    server_logger = logging.getLogger("lfgpy.server")
-    client_logger = logging.getLogger("lfgpy.client")
-    server_logger.setLevel(logging.WARN)
-    client_logger.setLevel(logging.WARN)
+    logger = logging.getLogger("lfgpy")
+    logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
     for attempt_count in [1, 10, 100, 1_000, 10_000, 100_000]:
         start = time.time()

@@ -1,5 +1,4 @@
 import sqlite3
-from os import PathLike
 from pathlib import Path
 from typing import Generator
 
@@ -11,15 +10,14 @@ from lfgpy.types import Username
 
 @pytest.fixture(scope="session")
 def db() -> Generator[Database, None, None]:
-    db_path = Path("/tmp/lfg-test.db")
-    database = Database(path=db_path)
+    database = Database(path=Path("/tmp/lfg-test.db"))
     database.create()
     yield database
-    db_path.unlink()
+    database.path.unlink()
 
 
-def _get_player_count(path: PathLike, username: Username) -> int:
-    with sqlite3.connect(path) as conn:
+def _get_player_count(db: Database, username: Username) -> int:
+    with sqlite3.connect(db.path) as conn:
         cursor = conn.cursor()
         response = cursor.execute(
             "SELECT COUNT(*) FROM player WHERE username IS :username",
@@ -33,6 +31,6 @@ def _get_player_count(path: PathLike, username: Username) -> int:
 def test_save_player(db: Database) -> None:
     username = Username("TestCilantro")
     db.save_player(username=username)
-    assert _get_player_count(db.path, username) == 1
+    assert _get_player_count(db, username) == 1
     db.remove_player(username)
-    assert _get_player_count(db.path, username) == 0
+    assert _get_player_count(db, username) == 0

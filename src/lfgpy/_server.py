@@ -2,41 +2,36 @@ from __future__ import annotations
 
 import logging
 import sys
-from os import PathLike
-from pathlib import Path
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Self
 
 import lfgpy._router as router
-from lfgpy._db import Database
 from lfgpy._message import Message, MessageKind
 from lfgpy.config import HOST
 from lfgpy.types import Username
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.DEBUG)
-
-DB = Database(path=Path("/tmp/lfg.db"))
 
 
 class ServerMessageHandler(BaseRequestHandler):
     def handle(self) -> None:
-        if not DB.path.exists():
-            raise Exception(f"Expected database at {DB.path} to exist")
-        db = Database(path=Path("/tmp/lfg.db"))
-        if message := Message.from_socket(self.request):
-            db.save_player(message.username)
-            message = router.authenticate_message(message)
-            message = router.handle_message(message)
-        else:
-            message = Message(
-                username=Username("Server"),
-                kind=MessageKind.MALFORMED,
-            )
+        # This is a magic number, why a client takes
+        # 5 seconds to get a message to me I don't know
+        self.request.settimeout(5)
 
-        logger.debug(f"Response: {message}")
-        self.request.sendall(message.encode())
+        # gotta be a better way to do this, probably
+        # throw it in the handle_error method on the server
+        message = Message(
+            username=Username("Server"),
+            kind=MessageKind.MALFORMED,
+        )
+        try:
+            if message := Message.from_socket(self.request):
+                message = router.authenticate_message(message)
+                message = router.handle_message(message)
+        finally:
+            logger.debug(f"Response: {message}")
+            self.request.sendall(message.encode())
 
 
 class Server(TCPServer):
@@ -49,8 +44,10 @@ class Server(TCPServer):
 
 
 def main() -> None:
-    DB.create()
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
     with Server(HOST, ServerMessageHandler) as server:
+        server.socket.settimeout(5)
         try:
             logger.info("Starting server...")
             logger.info(f"Listening on {HOST}...")

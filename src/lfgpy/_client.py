@@ -10,13 +10,6 @@ from lfgpy.config import HOST
 from lfgpy.types import Username
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.DEBUG)
-
-
-"""
-Mutable container for metadata stored on an instance of Client
-"""
 
 
 @dataclass(frozen=False, slots=True, kw_only=True)
@@ -56,6 +49,8 @@ class Client:
 
 
 def main() -> None:
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
     client = Client(username=Username("HotCilantro"))
     client.send_message(MessageKind.HELLO)
 

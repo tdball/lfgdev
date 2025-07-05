@@ -25,14 +25,16 @@ class Database:
 
     def save_player(self, username: Username) -> None:
         with sqlite3.connect(self.path) as conn:
+            statement = """
+                INSERT OR REPLACE INTO player VALUES(:username)
+            """
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO player VALUES(:username)", {"username": username}
-            )
+            cursor.execute(statement, {"username": username})
 
     def remove_player(self, username: Username) -> None:
         with sqlite3.connect(self.path) as conn:
+            statement = """
+                DELETE FROM player WHERE username IS :username
+            """
             cursor = conn.cursor()
-            cursor.execute(
-                "DELETE FROM player WHERE username IS :username", {"username": username}
-            )
+            cursor.execute(statement, {"username": username})

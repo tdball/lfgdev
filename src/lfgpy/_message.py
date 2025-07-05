@@ -41,17 +41,21 @@ class Message:
     kind: MessageKind
 
     @staticmethod
-    def from_socket(dest: socket) -> Message | None:
-        with io.BytesIO() as buffer:
+    def from_socket(dest: socket) -> Message:
+        while True:
+            # Since the data we expect is fixed, and
+            # we receive all that data at once, I'm gonna
+            # naively assume I can do without a buffer, and
+            # just decode the bytes.
             data: bytes = dest.recv(Message._CHUNK_SIZE)
-            buffer.write(data)
-            while not Message._TERMINATING_SYMBOL in data:
-                data = dest.recv(Message._CHUNK_SIZE)
-                buffer.write(data)
-            else:
-                data = buffer.getvalue()
-                logger.debug(f"{data=}")
+            if Message._TERMINATING_SYMBOL in data:
                 return Message.decode(data)
+            else:
+                # This means the client is sending malformed messages
+                # probably should return None still here, so we
+                # can catch None and return MessageKind.MALFORMED
+                logger.error(f"Unexpected Bytes: {data!r}")
+                raise Exception("This shouldn't happen")
 
     @classmethod
     def decode(cls, bytes: ByteString) -> Message:

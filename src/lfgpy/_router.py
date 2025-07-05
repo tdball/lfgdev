@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
+from lfgpy._db import Database
 from lfgpy._message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,9 @@ def authenticate_message(message) -> Message:
 
 
 def handle_message(message) -> Message:
+    db = Database(path=Path("/tmp/lfg-test.db"))
+    db.create()
+    db.save_player(message.username)
     match message.kind:
         case MessageKind.HELLO:
             logger.debug("HELLO Message")
