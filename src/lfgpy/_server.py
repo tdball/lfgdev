@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ServerMessageHandler(BaseRequestHandler):
     def handle(self) -> None:
-        # Default message, presume error, will override
-        # if successful
+        # Default message, presume error, will override on success
         message = Message(
             sent_by=Username("Server"),
             kind=MessageKind.MALFORMED,
