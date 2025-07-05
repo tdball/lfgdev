@@ -2,34 +2,38 @@ from __future__ import annotations
 
 import logging
 import sys
+from os import PathLike
+from pathlib import Path
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Self
-from uuid import uuid4
 
-import lfgpy.router as router
+import lfgpy._router as router
+from lfgpy._db import Database
+from lfgpy._message import Message, MessageKind
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind
+from lfgpy.types import Username
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.DEBUG)
 
+DB = Database(path=Path("/tmp/lfg.db"))
 
-class RequestHandler(BaseRequestHandler):
+
+class ServerMessageHandler(BaseRequestHandler):
     def handle(self) -> None:
-        client, port = self.client_address
-        logger.debug(f"Message from {client}:{port}")
+        if not DB.path.exists():
+            raise Exception(f"Expected database at {DB.path} to exist")
+        db = Database(path=Path("/tmp/lfg.db"))
         if message := Message.from_socket(self.request):
+            db.save_player(message.username)
             message = router.authenticate_message(message)
             message = router.handle_message(message)
         else:
-            # Weird case? Should I instead just throw an exception?
-            # I'm not sure it makes sense for the user to have a UUID
             message = Message(
-                user_id=uuid4(),
+                username=Username("Server"),
                 kind=MessageKind.MALFORMED,
             )
-            logger.debug(f"From {self.client_address}: Malformed message receieved")
 
         logger.debug(f"Response: {message}")
         self.request.sendall(message.encode())
@@ -45,7 +49,8 @@ class Server(TCPServer):
 
 
 def main() -> None:
-    with Server(HOST, RequestHandler, bind_and_activate=True) as server:
+    DB.create()
+    with Server(HOST, ServerMessageHandler) as server:
         try:
             logger.info("Starting server...")
             logger.info(f"Listening on {HOST}...")

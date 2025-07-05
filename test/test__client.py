@@ -3,19 +3,17 @@ import logging
 import time
 from threading import Thread
 from typing import Generator
-from uuid import uuid4
 
 import pytest
 
-from lfgpy.client import Client
+from lfgpy import Client, Server, ServerMessageHandler
 from lfgpy.config import HOST
-from lfgpy.message import MessageKind
-from lfgpy.server import RequestHandler, Server
+from lfgpy.types import MessageKind, Username
 
 
 @pytest.fixture(autouse=True, scope="session")
 def server() -> Generator[None, None, None]:
-    with Server(HOST, RequestHandler, bind_and_activate=True) as server:
+    with Server(HOST, ServerMessageHandler) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         yield
@@ -24,7 +22,7 @@ def server() -> Generator[None, None, None]:
 
 @pytest.fixture
 def client() -> Client:
-    return Client(user_id=uuid4())
+    return Client(username=Username("TestUser"))
 
 
 @pytest.mark.integration
@@ -35,9 +33,9 @@ def test_server_client_message_passing(client: Client) -> None:
 
 @pytest.mark.integration
 def test_user_persistence(client: Client) -> None:
-    client.login()
-    response = client.login()
-    assert response.user_id == client.user_id
+    client.send_message(MessageKind.LFG)
+    response = client.send_message(MessageKind.LFG)
+    assert response.username == client.username
     assert client.metadata.messages_sent == 2
 
 

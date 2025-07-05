@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from lfgpy.message import Message, MessageKind
+from lfgpy._message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 

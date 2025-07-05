@@ -1,12 +1,11 @@
-from uuid import uuid4
-
-from lfgpy.message import Message, MessageKind
+from lfgpy import Message
+from lfgpy.types import MessageKind, Username
 
 
 def test_encode_decode() -> None:
     message = Message(
         kind=MessageKind.HELLO,
-        user_id=uuid4(),
+        username=Username("TestUser"),
     )
     bytes = message.encode()
     assert Message.decode(bytes) == message

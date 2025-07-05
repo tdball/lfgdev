@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import logging
 import socket
 import sys
 from dataclasses import dataclass, field
-from uuid import UUID, uuid4
 
+from lfgpy._message import Message, MessageKind
 from lfgpy.config import HOST
-from lfgpy.message import Message, MessageKind
+from lfgpy.types import Username
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -24,10 +26,12 @@ class ClientMetadata:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Client:
-    # Maybe combo of FriendlyName and number? Name#1234?
-    # What if just string??
-    user_id: UUID
+    username: Username  # TODO: This needs to be validated
     metadata: ClientMetadata = field(default_factory=ClientMetadata)
+
+    def __post__init__(self) -> None:
+        if len(self.username) > 24:
+            raise ValueError("Username too long; Must be less than 24 characters")
 
     def connect(self) -> socket.socket:
         sock = socket.socket()
@@ -36,7 +40,7 @@ class Client:
 
     def send_message(self, kind: MessageKind) -> Message:
         with self.connect() as sock:
-            message = Message(kind=kind, user_id=self.user_id)
+            message = Message(kind=kind, username=self.username)
             host, port = sock.getpeername()
             logger.debug(f"Request: {message}")
             sock.sendall(message.encode())
@@ -50,12 +54,9 @@ class Client:
     def say_hello(self) -> Message:
         return self.send_message(MessageKind.HELLO)
 
-    def login(self) -> Message:
-        return self.send_message(MessageKind.LOGIN)
-
 
 def main() -> None:
-    client = Client(user_id=uuid4())
+    client = Client(username=Username("HotCilantro"))
     client.send_message(MessageKind.HELLO)
 
 
