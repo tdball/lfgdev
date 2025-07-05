@@ -35,7 +35,7 @@ def test_server_client_message_passing(client: Client) -> None:
 def test_user_persistence(client: Client) -> None:
     client.send_message(MessageKind.LFG)
     response = client.send_message(MessageKind.LFG)
-    assert response.username == client.username
+    assert response.sent_by == client.username
     assert client.metadata.messages_sent == 2
 
 

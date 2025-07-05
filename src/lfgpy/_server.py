@@ -15,14 +15,10 @@ logger = logging.getLogger(__name__)
 
 class ServerMessageHandler(BaseRequestHandler):
     def handle(self) -> None:
-        # This is a magic number, why a client takes
-        # 5 seconds to get a message to me I don't know
-        self.request.settimeout(5)
-
-        # gotta be a better way to do this, probably
-        # throw it in the handle_error method on the server
+        # Default message, presume error, will override
+        # if successful
         message = Message(
-            username=Username("Server"),
+            sent_by=Username("Server"),
             kind=MessageKind.MALFORMED,
         )
         try:
@@ -35,6 +31,7 @@ class ServerMessageHandler(BaseRequestHandler):
 
 
 class Server(TCPServer):
+    # This almost definitely needs to be threaded
     allow_reuse_address = True
     allow_reuse_port = True
 

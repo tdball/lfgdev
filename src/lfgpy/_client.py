@@ -19,7 +19,7 @@ class ClientMetadata:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Client:
-    username: Username  # TODO: This needs to be validated
+    username: Username
     metadata: ClientMetadata = field(default_factory=ClientMetadata)
 
     def __post__init__(self) -> None:
@@ -33,7 +33,7 @@ class Client:
 
     def send_message(self, kind: MessageKind) -> Message:
         with self.connect() as sock:
-            message = Message(kind=kind, username=self.username)
+            message = Message(kind=kind, sent_by=self.username)
             host, port = sock.getpeername()
             logger.debug(f"Request: {message}")
             sock.sendall(message.encode())

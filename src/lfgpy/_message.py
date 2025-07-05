@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import logging
 from dataclasses import dataclass, field
 from socket import socket
@@ -29,52 +28,40 @@ def _to_bytes(value: Any) -> int | bytes:
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class Message:
-    _TERMINATING_SYMBOL: ClassVar[bytes] = b"\n"
     _STRUCT: ClassVar[Struct] = Struct(format="!16sx24sxIx")
-    _CHUNK_SIZE: ClassVar[int] = _STRUCT.size + len(_TERMINATING_SYMBOL)
     _encoder: ClassVar[Callable[[Any], int | bytes]] = field(default=_to_bytes)
 
-    # Consider, how do I tag a message as from a specific client?
-    # maybe ssh public keys?, gonna defer the heck outta that
+    # TODO: Maybe SSH keys for user id/registration?
     identifier: UUID = field(default_factory=uuid4)
-    username: Username
+    sent_by: Username
     kind: MessageKind
 
     @staticmethod
-    def from_socket(dest: socket) -> Message:
-        while True:
-            # Since the data we expect is fixed, and
-            # we receive all that data at once, I'm gonna
-            # naively assume I can do without a buffer, and
-            # just decode the bytes.
-            data: bytes = dest.recv(Message._CHUNK_SIZE)
-            if Message._TERMINATING_SYMBOL in data:
-                return Message.decode(data)
-            else:
-                # This means the client is sending malformed messages
-                # probably should return None still here, so we
-                # can catch None and return MessageKind.MALFORMED
-                logger.error(f"Unexpected Bytes: {data!r}")
-                raise Exception("This shouldn't happen")
+    def from_socket(dest: socket, timeout: float | None = None) -> Message:
+        timeout = timeout or 0.5
+        dest.settimeout(timeout)
+        # Probably naive, doesn't handle messages it doesn't expect
+        data: bytes = dest.recv(Message._STRUCT.size)
+        logger.debug(f"Bytes: {data!r}")
+        return Message.decode(data)
 
     @classmethod
     def decode(cls, bytes: ByteString) -> Message:
         message = Message._STRUCT.unpack_from(bytes, offset=0)
         identifier = UUID(bytes=message[0])
-
         # Username has a max length of 24, strip the 0s
         username = Username(message[1].decode("UTF-8").strip("\x00"))
-
         kind = MessageKind(message[2])
-        return Message(identifier=identifier, username=Username(username), kind=kind)
+
+        return Message(identifier=identifier, sent_by=Username(username), kind=kind)
 
     def encode(self) -> bytes:
         message = Message._STRUCT.pack(
             Message._encoder(self.identifier),
-            Message._encoder(self.username),
+            Message._encoder(self.sent_by),
             Message._encoder(self.kind),
         )
-        return message + Message._TERMINATING_SYMBOL
+        return message
 
     def with_kind(self, kind: MessageKind) -> Message:
         """
@@ -83,6 +70,6 @@ class Message:
         """
         return Message(
             identifier=self.identifier,
-            username=self.username,
+            sent_by=self.sent_by,
             kind=kind,
         )
