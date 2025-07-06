@@ -37,8 +37,7 @@ class Message:
     kind: MessageKind
 
     @staticmethod
-    def from_socket(dest: socket, timeout: float | None = None) -> Message:
-        timeout = timeout or 0.5
+    def from_socket(dest: socket, timeout: float = 0.5) -> Message:
         dest.settimeout(timeout)
         # Probably naive, doesn't handle messages it doesn't expect
         data: bytes = dest.recv(Message._STRUCT.size)

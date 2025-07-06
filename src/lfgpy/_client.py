@@ -4,9 +4,9 @@ import logging
 import socket
 import sys
 from dataclasses import dataclass, field
+import argparse
 
 from lfgpy._message import Message, MessageKind
-from lfgpy.config import HOST
 from lfgpy.types import Username
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,8 @@ class ClientMetadata:
 class Client:
     username: Username
     metadata: ClientMetadata = field(default_factory=ClientMetadata)
+    address: str
+    port: int
 
     def __post__init__(self) -> None:
         if len(self.username) > 24:
@@ -28,7 +30,7 @@ class Client:
 
     def connect(self) -> socket.socket:
         sock = socket.socket()
-        sock.connect(HOST)
+        sock.connect((self.address, self.port))
         return sock
 
     def send_message(self, kind: MessageKind) -> Message:
@@ -51,7 +53,16 @@ class Client:
 def main() -> None:
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-    client = Client(username=Username("HotCilantro"))
+
+    parser = argparse.ArgumentParser(prog="LFG Client CLI")
+    parser.add_argument(
+        "--host", type=str, required=True, help="Server hostname to connect to"
+    )
+    parser.add_argument("--port", type=int, default=1337, help="Port to connect to")
+    args = parser.parse_args()
+
+    client = Client(username=Username("HotCilantro"), address=args.host, port=args.port)
+
     client.send_message(MessageKind.HELLO)
 
 

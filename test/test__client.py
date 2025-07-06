@@ -7,13 +7,12 @@ from typing import Generator
 import pytest
 
 from lfgpy import Client, Server, ServerMessageHandler
-from lfgpy.config import HOST
 from lfgpy.types import MessageKind, Username
 
 
 @pytest.fixture(autouse=True, scope="session")
 def server() -> Generator[None, None, None]:
-    with Server(HOST, ServerMessageHandler) as server:
+    with Server(("localhost", 3117), ServerMessageHandler) as server:
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         yield
@@ -22,7 +21,7 @@ def server() -> Generator[None, None, None]:
 
 @pytest.fixture
 def client() -> Client:
-    return Client(username=Username("TestUser"))
+    return Client(address="localhost", port=3117, username=Username("TestUser"))
 
 
 @pytest.mark.integration

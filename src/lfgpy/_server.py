@@ -7,8 +7,8 @@ from typing import Self
 
 import lfgpy._router as router
 from lfgpy._message import Message, MessageKind
-from lfgpy.config import HOST
 from lfgpy.types import Username
+import argparse
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +42,17 @@ class Server(TCPServer):
 def main() -> None:
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
-    with Server(HOST, ServerMessageHandler) as server:
-        server.socket.settimeout(5)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=1337)
+    parser.add_argument("--local-only", action="store_true")
+    args = parser.parse_args()
+
+    hostname = "localhost" if args.local_only else "0.0.0.0"
+    with Server((hostname, args.port), ServerMessageHandler) as server:
         try:
             logger.info("Starting server...")
-            logger.info(f"Listening on {HOST}...")
+            logger.info(f"Listening on {server.socket.getsockname()}...")
             server.serve_forever()
         except KeyboardInterrupt:
             logger.info("Shutting down...")
