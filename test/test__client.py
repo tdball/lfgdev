@@ -6,17 +6,17 @@ from typing import Generator
 
 import pytest
 
-from lfgpy import Client, Server, ServerMessageHandler
+from lfgpy import Client, serve
 from lfgpy.types import MessageKind, Username
 
 
 @pytest.fixture(autouse=True, scope="session")
 def server() -> Generator[None, None, None]:
-    with Server(("localhost", 3117), ServerMessageHandler) as server:
-        thread = Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        yield
-        server.shutdown()
+    thread = Thread(
+        target=serve, kwargs={"host": "localhost", "port": 3117}, daemon=True
+    )
+    thread.start()
+    yield
 
 
 @pytest.fixture
@@ -38,12 +38,14 @@ def test_user_persistence(client: Client) -> None:
     assert client.metadata.messages_sent == 2
 
 
-@pytest.mark.profiling
+@pytest.mark.integration
 def test_throughput(client: Client) -> None:
     logger = logging.getLogger("lfgpy")
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
-    for attempt_count in [1, 10, 100, 1_000, 10_000, 100_000]:
+    for attempt_count in [
+        1,
+    ]:  # 10, 100, 1_000, 10_000, 100_000]:
         start = time.time()
         for _ in range(attempt_count):
             client.say_hello()

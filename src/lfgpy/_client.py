@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import argparse
 import logging
 import socket
 import sys
 from dataclasses import dataclass, field
-import argparse
 
 from lfgpy._message import Message, MessageKind
 from lfgpy.types import Username
