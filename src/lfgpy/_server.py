@@ -29,7 +29,7 @@ def serve(host: str, port: int) -> None:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.bind((host, port))
-        sock.listen()  # Backlog must be important, profiling breaks now
+        sock.listen(1)  # Backlog must be important, profiling breaks now
         while True:
             connection, client = sock.accept()
             handle_request(connection)

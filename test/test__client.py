@@ -38,14 +38,12 @@ def test_user_persistence(client: Client) -> None:
     assert client.metadata.messages_sent == 2
 
 
-@pytest.mark.integration
+@pytest.mark.profiling
 def test_throughput(client: Client) -> None:
     logger = logging.getLogger("lfgpy")
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
-    for attempt_count in [
-        1,
-    ]:  # 10, 100, 1_000, 10_000, 100_000]:
+    for attempt_count in [1, 10, 100, 1_000, 10_000, 100_000]:
         start = time.time()
         for _ in range(attempt_count):
             client.say_hello()
