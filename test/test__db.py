@@ -1,18 +1,7 @@
-from pathlib import Path
-from typing import Generator
-
 import pytest
 
 from lfgpy._db import Database
 from lfgpy.types import Username
-
-
-@pytest.fixture(scope="session")
-def db() -> Generator[Database, None, None]:
-    database = Database(path=Path("/tmp/lfg-test.db"))
-    database.setup()
-    yield database
-    database.path.unlink()
 
 
 @pytest.mark.integration

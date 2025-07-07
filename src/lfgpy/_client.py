@@ -46,9 +46,6 @@ class Client:
             else:
                 raise Exception(f"Empty or Invalid response from - {host}:{port}")
 
-    def say_hello(self) -> Message:
-        return self.send_message(MessageKind.HELLO)
-
 
 def main() -> None:
     logger.addHandler(logging.StreamHandler(sys.stdout))

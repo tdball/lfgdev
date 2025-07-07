@@ -10,4 +10,6 @@ class MessageKind(IntEnum):
     NO_HELLO = auto()
     LFG = auto()
 
+    # Error responses
     MALFORMED = auto()
+    TIMEOUT = auto()
