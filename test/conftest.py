@@ -1,8 +1,6 @@
-import time
 from pathlib import Path
 from threading import Thread
 from typing import Generator
-
 import pytest
 
 from lfgpy import Client, serve
@@ -10,13 +8,12 @@ from lfgpy.db import Database
 from lfgpy.types import Username
 
 
-@pytest.fixture(autouse=True, scope="module")
+@pytest.fixture(autouse=True, scope="session")
 def server() -> Generator[None, None, None]:
     thread = Thread(
         target=serve, kwargs={"host": "localhost", "port": 3117}, daemon=True
     )
     thread.start()
-    # TODO: Assert server is live before the yield, this causes flakey testing
     yield
 
 
