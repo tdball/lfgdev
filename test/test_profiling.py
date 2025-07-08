@@ -10,6 +10,7 @@ from lfgpy.types import MessageKind
 
 @pytest.mark.profiling
 def test_throughput(client: Client) -> None:
+    # TODO: Capure commit id and append it to the filename
     logger = logging.getLogger("lfgpy")
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
@@ -19,5 +20,5 @@ def test_throughput(client: Client) -> None:
             client.send_message(kind=MessageKind.HELLO)
         results.update({attempt_count: (time.time() - start) * 1000})
 
-    with open(f"profiling-results-{time.time()}.json", "w") as f:
+    with open(f".profiling/{time.time():.0%}.json", "w") as f:
         json.dump(results, f)

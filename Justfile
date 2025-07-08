@@ -7,3 +7,6 @@ test:
     uv run ruff check --select I
     uv run mypy
     uv run pytest -sv
+
+profile:
+    uv run pytest -m profiling
