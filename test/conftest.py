@@ -5,7 +5,7 @@ from typing import Generator
 import pytest
 
 from lfgpy import Client, serve
-from lfgpy._db import Database
+from lfgpy.db import Database
 from lfgpy.types import Username
 
 
