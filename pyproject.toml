@@ -28,3 +28,8 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-v -m 'not integration' -m 'not profiling'"
 markers = ["integration", "profiling"]
+
+[tool.mypy]
+warn_return_any = true
+disallow_untyped_defs = true
+files = 'src/**/*.py'

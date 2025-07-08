@@ -44,7 +44,7 @@ def serve(host: str, port: int) -> None:
             connection.close()
 
 
-def main():
+def main() -> None:
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
