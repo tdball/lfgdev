@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from threading import Thread
 from typing import Generator
@@ -15,11 +16,12 @@ def server() -> Generator[None, None, None]:
         target=serve, kwargs={"host": "localhost", "port": 3117}, daemon=True
     )
     thread.start()
+    # TODO: Assert server is live before the yield, this causes flakey testing
     yield
 
 
 @pytest.fixture
-def client() -> Client:
+def client(server: None) -> Client:
     return Client(address="localhost", port=3117, username=Username("TestUser"))
 
 
