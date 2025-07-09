@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from lfgpy.db import Database
+from lfgpy.server.db import Database
 from lfgpy.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)

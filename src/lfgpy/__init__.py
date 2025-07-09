@@ -1,3 +1,3 @@
-from lfgpy.client import Client as Client
+from lfgpy.client.main import Client as Client
 from lfgpy.message import Message as Message
-from lfgpy.server import serve as serve
+from lfgpy.server.main import serve as serve

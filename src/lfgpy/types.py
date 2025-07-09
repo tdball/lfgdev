@@ -13,3 +13,6 @@ class MessageKind(IntEnum):
     # Error responses
     MALFORMED = auto()
     TIMEOUT = auto()
+
+    # Skills
+    TRAIN_RANGED = auto()

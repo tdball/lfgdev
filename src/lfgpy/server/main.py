@@ -3,7 +3,7 @@ import logging
 import socket
 import sys
 
-from lfgpy import router
+from lfgpy.server import router
 from lfgpy.message import Message
 from lfgpy.types import MessageKind, Username
 
@@ -45,8 +45,9 @@ def serve(host: str, port: int) -> None:
 
 
 def main() -> None:
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    server_logger = logging.getLogger("lfgpy")
+    server_logger.addHandler(logging.StreamHandler(sys.stdout))
+    server_logger.setLevel(logging.DEBUG)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=1337)
@@ -60,7 +61,3 @@ def main() -> None:
         serve(host=hostname, port=args.port)
     except KeyboardInterrupt:
         logger.info("Shutting down...")
-
-
-if __name__ == "__main__":
-    main()

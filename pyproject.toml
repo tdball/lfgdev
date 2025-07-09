@@ -11,8 +11,8 @@ requires-python = ">=3.13"
 dependencies = []
 
 [project.scripts]
-lfg-server = "lfgpy._server:main"
-lfg-client = "lfgpy._client:main"
+lfg-server = "lfgpy.server:main.main"
+lfg-client = "lfgpy.client:main.main"
 
 [dependency-groups]
 dev = [

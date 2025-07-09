@@ -1,6 +1,6 @@
 import pytest
 
-from lfgpy.db import Database
+from lfgpy.server.db import Database
 from lfgpy.types import Username
 
 
