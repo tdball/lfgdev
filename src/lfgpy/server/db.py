@@ -21,6 +21,8 @@ class Player:
 class Database:
     """Only intended to have a single table, lfg"""
 
+    # TODO: Enable connection pool for async writes and reads
+
     path: Path
 
     def init(self) -> None:

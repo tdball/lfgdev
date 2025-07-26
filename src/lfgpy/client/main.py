@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import argparse
 import logging
-import socket
 import sys
 from dataclasses import dataclass, field
+import asyncio
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from lfgpy.message import Message, MessageKind
 from lfgpy.types import Username
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -29,31 +30,45 @@ class Client:
         if len(self.username) > 24:
             raise ValueError("Username too long; Must be less than 24 characters")
 
-    def connect(self, attempts: int = 10) -> socket.socket:
-        # TODO: Attempts should probably be a timeout, or at least add backoff
-        sock = socket.socket()
-        last_error = None
-        for _ in range(attempts):
+    @asynccontextmanager
+    async def connect(
+        self,
+    ) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
+        reader: asyncio.StreamReader | None = None
+        writer: asyncio.StreamWriter | None = None
+        for _ in range(10):
             try:
-                sock.connect((self.address, self.port))
-                return sock
-            except ConnectionRefusedError as error:
-                last_error = error
-                time.sleep(0.01)
-        raise ConnectionError("Unable to connect to server") from last_error
+                reader, writer = await asyncio.open_connection(
+                    host=self.address, port=self.port
+                )
+                break
+            except OSError:
+                await asyncio.sleep(0.1)
 
-    def send(self, kind: MessageKind) -> Message:
-        with self.connect() as sock:
+        if reader is None or writer is None:
+            raise ConnectionError(
+                f"Unable to establish connection to {self.address}:{self.port}"
+            )
+        try:
+            yield reader, writer
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    async def send(self, kind: MessageKind) -> Message:
+        async with self.connect() as conn:
+            reader, writer = conn
             message = Message(kind=kind, sent_by=self.username)
-            host, port = sock.getpeername()
             logger.debug(f"Request: {message}")
-            sock.sendall(message.encode())
+            writer.write(message.encode())
             self.metadata.messages_sent += 1
-            if response := Message.from_socket(sock):
-                logger.debug(f"Response from {host}:{port} - {response}")
+            if response := await Message.from_stream(stream=reader):
+                logger.debug(f"Response from {self.address}:{self.port} - {response}")
                 return response
             else:
-                raise Exception(f"Empty or Invalid response from - {host}:{port}")
+                raise Exception(
+                    f"Empty or Invalid response from - {self.address}:{self.port}"
+                )
 
 
 def cli() -> None:
@@ -85,4 +100,4 @@ def cli() -> None:
 
     client = Client(username=args.username, address=args.host, port=args.port)
     if args.kind:
-        client.send(kind=MessageKind[args.kind])
+        asyncio.run(client.send(kind=MessageKind[args.kind]))
