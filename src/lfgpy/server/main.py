@@ -1,6 +1,6 @@
 import argparse
+import asyncio
 import logging
-import socket
 import sys
 
 from lfgpy.server import router
@@ -8,43 +8,47 @@ from lfgpy.message import Message
 from lfgpy.types import MessageKind, Username
 from pathlib import Path
 from lfgpy.server.db import Database
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
 
-def handle_request(client: socket.socket, db: Database) -> None:
-    message = Message(
-        sent_by=Username("Server"),
-        kind=MessageKind.MALFORMED,
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RequestHandler:
+    db: Database
+
+    async def handle(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
+        message = Message(sent_by=Username("Server"), kind=MessageKind.MALFORMED)
+        try:
+            if message := await Message.from_stream(stream=reader):
+                message = router.authenticate_message(message)
+                message = router.handle_message(message, self.db)
+        except TimeoutError:
+            message = Message(
+                sent_by=Username("Server"),
+                kind=MessageKind.TIMEOUT,
+            )
+        finally:
+            logger.debug(f"Response: {message}")
+            writer.write(message.encode())
+            writer.close()
+            await writer.wait_closed()
+
+
+async def serve(host: str, port: int, db: Database) -> None:
+    request_handler = RequestHandler(db=db)
+    server = await asyncio.start_server(
+        client_connected_cb=request_handler.handle,
+        host=host,
+        port=port,
+        reuse_port=True,
+        reuse_address=True,
+        start_serving=False,
     )
-    try:
-        if message := Message.from_socket(client):
-            message = router.authenticate_message(message)
-            message = router.handle_message(message, db)
-    except TimeoutError:
-        addr, port = client.getsockname()
-        logger.debug(f"Timeout from client - {addr}:{port}")
-        message = Message(
-            sent_by=Username("Server"),
-            kind=MessageKind.TIMEOUT,
-        )
-
-    finally:
-        logger.debug(f"Response: {message}")
-        client.sendall(message.encode())
-
-
-def serve(host: str, port: int, db: Database) -> None:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-        sock.bind((host, port))
-        sock.listen(1)
-
-        while True:
-            connection, client = sock.accept()
-            handle_request(connection, db)
-            connection.close()
+    async with server:
+        await server.serve_forever()
 
 
 def main() -> None:
@@ -63,6 +67,6 @@ def main() -> None:
     try:
         db = Database(path=Path("/tmp/lfg.db"))
         db.init()
-        serve(host=hostname, port=args.port, db=db)
+        asyncio.run(serve(host=hostname, port=args.port, db=db))
     except KeyboardInterrupt:
         logger.info("Shutting down...")

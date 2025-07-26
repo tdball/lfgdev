@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from lfgpy.message import Message, MessageKind
 from lfgpy.types import Username
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,18 @@ class Client:
         if len(self.username) > 24:
             raise ValueError("Username too long; Must be less than 24 characters")
 
-    def connect(self) -> socket.socket:
+    def connect(self, attempts: int = 10) -> socket.socket:
+        # TODO: Attempts should probably be a timeout, or at least add backoff
         sock = socket.socket()
-        sock.connect((self.address, self.port))
-        return sock
+        last_error = None
+        for _ in range(attempts):
+            try:
+                sock.connect((self.address, self.port))
+                return sock
+            except ConnectionRefusedError as error:
+                last_error = error
+                time.sleep(0.01)
+        raise ConnectionError("Unable to connect to server") from last_error
 
     def send(self, kind: MessageKind) -> Message:
         with self.connect() as sock:

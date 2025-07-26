@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from socket import socket
@@ -41,6 +41,12 @@ class Message:
         dest.settimeout(timeout)
         # Probably naive, doesn't handle messages it doesn't expect
         data: bytes = dest.recv(Message._STRUCT.size)
+        logger.debug(f"Bytes: {data!r}")
+        return Message.decode(data)
+
+    @staticmethod
+    async def from_stream(stream: asyncio.StreamReader) -> Message:
+        data: bytes = await stream.readexactly(Message._STRUCT.size)
         logger.debug(f"Bytes: {data!r}")
         return Message.decode(data)
 
