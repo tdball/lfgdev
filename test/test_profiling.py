@@ -17,7 +17,7 @@ def test_throughput(client: Client) -> None:
     for attempt_count in [1, 10, 100, 1_000, 10_000, 100_000]:
         start = time.time()
         for _ in range(attempt_count):
-            client.send_message(kind=MessageKind.HELLO)
+            client.send(kind=MessageKind.HELLO)
         results.update({attempt_count: (time.time() - start) * 1000})
 
     with open(f".profiling/{time.time():.0%}.json", "w") as f:

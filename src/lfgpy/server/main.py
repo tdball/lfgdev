@@ -6,11 +6,13 @@ import sys
 from lfgpy.server import router
 from lfgpy.message import Message
 from lfgpy.types import MessageKind, Username
+from pathlib import Path
+from lfgpy.server.db import Database
 
 logger = logging.getLogger(__name__)
 
 
-def handle_request(client: socket.socket) -> None:
+def handle_request(client: socket.socket, db: Database) -> None:
     message = Message(
         sent_by=Username("Server"),
         kind=MessageKind.MALFORMED,
@@ -18,7 +20,7 @@ def handle_request(client: socket.socket) -> None:
     try:
         if message := Message.from_socket(client):
             message = router.authenticate_message(message)
-            message = router.handle_message(message)
+            message = router.handle_message(message, db)
     except TimeoutError:
         addr, port = client.getsockname()
         logger.debug(f"Timeout from client - {addr}:{port}")
@@ -32,15 +34,16 @@ def handle_request(client: socket.socket) -> None:
         client.sendall(message.encode())
 
 
-def serve(host: str, port: int) -> None:
+def serve(host: str, port: int, db: Database) -> None:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.bind((host, port))
         sock.listen(1)
+
         while True:
             connection, client = sock.accept()
-            handle_request(connection)
+            handle_request(connection, db)
             connection.close()
 
 
@@ -58,6 +61,8 @@ def main() -> None:
     logger.info("Starting server...")
     logger.info(f"Listening on {hostname}:{args.port}...")
     try:
-        serve(host=hostname, port=args.port)
+        db = Database(path=Path("/tmp/lfg.db"))
+        db.init()
+        serve(host=hostname, port=args.port, db=db)
     except KeyboardInterrupt:
         logger.info("Shutting down...")

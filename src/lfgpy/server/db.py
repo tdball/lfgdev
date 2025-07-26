@@ -23,8 +23,8 @@ class Database:
 
     path: Path
 
-    def setup(self) -> None:
-        logger.debug("Creating player table")
+    def init(self) -> None:
+        logger.debug(f"Initializing database at {self.path}")
         with sqlite3.connect(self.path) as conn:
             statement = """
             CREATE TABLE IF NOT EXISTS lfg (

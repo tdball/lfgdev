@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 from lfgpy.server.db import Database
 from lfgpy.message import Message, MessageKind
@@ -16,10 +15,7 @@ def authenticate_message(message: Message) -> Message:
     return message
 
 
-def handle_message(message: Message) -> Message:
-    # Definitely not the place to do this
-    db = Database(path=Path("/tmp/lfg-test.db"))
-    db.setup()
+def handle_message(message: Message, db: Database) -> Message:
     if db.get_player(message.sent_by) is None:
         db.add_player(message.sent_by)
     else:
@@ -28,10 +24,9 @@ def handle_message(message: Message) -> Message:
 
     match message.kind:
         case MessageKind.HELLO:
-            logger.debug("HELLO Message")
             return message.with_kind(MessageKind.COMPUTER_SAYS_NO)
         case MessageKind.LFG:
-            logger.debug("LFG Message")
+            return message
         case _:
             logger.debug("No Route Defined")
 

@@ -4,6 +4,7 @@ format:
 
 test:
     uv run ruff check
+    uv run ruff format --check
     uv run mypy
     uv run pytest -sv
 

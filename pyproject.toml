@@ -12,7 +12,7 @@ dependencies = []
 
 [project.scripts]
 lfg-server = "lfgpy.server:main.main"
-lfg-client = "lfgpy.client:main.main"
+lfg-client = "lfgpy.client:main.cli"
 
 [dependency-groups]
 dev = [
