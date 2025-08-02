@@ -42,8 +42,11 @@ class Client:
                     host=self.address, port=self.port
                 )
                 break
-            except OSError:
-                await asyncio.sleep(0.1)
+            except OSError as error:
+                logger.error(error)
+                if "Connect call failed" in error.args[0]:
+                    await asyncio.sleep(0.1)
+                raise
 
         if reader is None or writer is None:
             raise ConnectionError(

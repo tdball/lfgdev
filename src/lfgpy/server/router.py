@@ -8,16 +8,16 @@ from lfgpy.message import Message, MessageKind
 logger = logging.getLogger(__name__)
 
 
-def authenticate_message(message: Message) -> Message:
+async def authenticate_message(message: Message) -> Message:
     # Should this raise an exception? Or just return None?
     # Probably None, no need to crash server threads
     logger.debug("Authenticating...? Go implement this at some point you donut")
     return message
 
 
-def handle_message(message: Message, db: Database) -> Message:
-    if db.get_player(message.sent_by) is None:
-        db.add_player(message.sent_by)
+async def handle_message(message: Message, db: Database) -> Message:
+    if await db.find_by_username(message.sent_by) is None:
+        await db.save(message.sent_by)
     else:
         # TODO: Add an "update" method
         pass

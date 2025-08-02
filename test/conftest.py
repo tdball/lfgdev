@@ -11,10 +11,9 @@ from lfgpy.types import Username
 
 @pytest.fixture(scope="session")
 def db() -> Generator[Database, None, None]:
-    database = Database(path=Path("/tmp/lfg-test.db"))
-    database.init()
-    yield database
-    database.path.unlink()
+    with Database.init(path=Path("/tmp/lfg-test.db")) as db:
+        yield db
+        db.path.unlink()
 
 
 @pytest.fixture(autouse=True, scope="session")

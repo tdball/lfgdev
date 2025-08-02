@@ -23,8 +23,8 @@ class RequestHandler:
         message = Message(sent_by=Username("Server"), kind=MessageKind.MALFORMED)
         try:
             if message := await Message.from_stream(stream=reader):
-                message = router.authenticate_message(message)
-                message = router.handle_message(message, self.db)
+                message = await router.authenticate_message(message)
+                message = await router.handle_message(message, self.db)
         except TimeoutError:
             message = Message(
                 sent_by=Username("Server"),
@@ -65,8 +65,7 @@ def main() -> None:
     logger.info("Starting server...")
     logger.info(f"Listening on {hostname}:{args.port}...")
     try:
-        db = Database(path=Path("/tmp/lfg.db"))
-        db.init()
-        asyncio.run(serve(host=hostname, port=args.port, db=db))
+        with Database.init(path=Path("/tmp/lfg.db")) as db:
+            asyncio.run(serve(host=hostname, port=args.port, db=db))
     except KeyboardInterrupt:
         logger.info("Shutting down...")
