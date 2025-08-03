@@ -3,11 +3,11 @@ import asyncio
 import logging
 import sys
 
-from lfgpy.server import router
-from lfgpy.message import Message
-from lfgpy.types import MessageKind, Username
+from lfgdev.server import router
+from lfgdev.message import Message
+from lfgdev.types import MessageKind, Username
 from pathlib import Path
-from lfgpy.server.db import Database
+from lfgdev.server.db import Database
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ async def serve(host: str, port: int, db: Database) -> None:
 
 
 def main() -> None:
-    server_logger = logging.getLogger("lfgpy")
+    server_logger = logging.getLogger("lfgdev")
     server_logger.addHandler(logging.StreamHandler(sys.stdout))
     server_logger.setLevel(logging.DEBUG)
 

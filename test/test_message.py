@@ -1,5 +1,5 @@
-from lfgpy import Message
-from lfgpy.types import MessageKind, Username
+from lfgdev import Message
+from lfgdev.types import MessageKind, Username
 
 
 def test_encode_decode() -> None:

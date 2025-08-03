@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 
-from lfgpy.server.db import Database
-from lfgpy.message import Message, MessageKind
+from lfgdev.server.db import Database
+from lfgdev.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 

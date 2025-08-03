@@ -4,15 +4,15 @@ import time
 import asyncio
 import pytest
 
-from lfgpy import Client
-from lfgpy.types import MessageKind
+from lfgdev import Client
+from lfgdev.types import MessageKind
 
 
 @pytest.mark.profiling
 @pytest.mark.asyncio
 async def test_throughput(client: Client) -> None:
     # TODO: Capure commit id and append it to the filename
-    logger = logging.getLogger("lfgpy")
+    logger = logging.getLogger("lfgdev")
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
     for attempt_count in [1, 10, 100, 1_000]:

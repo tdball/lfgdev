@@ -7,7 +7,7 @@ from struct import Struct
 from typing import Any, ByteString, Callable, ClassVar
 from uuid import UUID, uuid4
 
-from lfgpy.types import MessageKind, Username
+from lfgdev.types import MessageKind, Username
 
 logger = logging.getLogger(__name__)
 

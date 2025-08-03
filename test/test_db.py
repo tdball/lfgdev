@@ -1,7 +1,7 @@
 import pytest
 
-from lfgpy.server.db import Database
-from lfgpy.types import Username
+from lfgdev.server.db import Database
+from lfgdev.types import Username
 
 
 @pytest.mark.integration

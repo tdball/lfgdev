@@ -93,7 +93,7 @@ wheels = [
 ]
 
 [[package]]
-name = "lfgpy"
+name = "lfgdev"
 source = { editable = "." }
 
 [package.dev-dependencies]

@@ -3,16 +3,16 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lfgpy"
+name = "lfgdev"
 dynamic = ["version"]
-description = "Add your description here"
+description = "LFG: Deliver Efficient Value"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
 
 [project.scripts]
-lfg-server = "lfgpy.server:main.main"
-lfg-client = "lfgpy.client:main.cli"
+lfgdev-server = "lfgdev.server:main.main"
+lfgdev = "lfgdev.client:main.cli"
 
 [dependency-groups]
 dev = [

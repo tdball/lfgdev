@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import asyncio
 from typing import TYPE_CHECKING, Iterator
-from lfgpy.types import Username
+from lfgdev.types import Username
 from concurrent.futures import ThreadPoolExecutor
 
 if TYPE_CHECKING:

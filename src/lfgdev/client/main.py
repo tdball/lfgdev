@@ -8,8 +8,8 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgpy.message import Message, MessageKind
-from lfgpy.types import Username
+from lfgdev.message import Message, MessageKind
+from lfgdev.types import Username
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class Client:
 
 
 def cli() -> None:
-    client_logger = logging.getLogger("lfgpy")
+    client_logger = logging.getLogger("lfgdev")
     client_logger.addHandler(logging.StreamHandler(sys.stdout))
     client_logger.setLevel(logging.DEBUG)
     parser = argparse.ArgumentParser(prog="LFG Client CLI")

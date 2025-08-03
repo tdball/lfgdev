@@ -1,7 +1,7 @@
 import pytest
 
-from lfgpy import Client
-from lfgpy.types import MessageKind
+from lfgdev import Client
+from lfgdev.types import MessageKind
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 

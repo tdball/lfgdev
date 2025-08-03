@@ -4,9 +4,9 @@ from typing import Generator
 import pytest
 import time
 import asyncio
-from lfgpy import Client, serve
-from lfgpy.server.db import Database
-from lfgpy.types import Username
+from lfgdev import Client, serve
+from lfgdev.server.db import Database
+from lfgdev.types import Username
 
 
 @pytest.fixture(scope="session")
