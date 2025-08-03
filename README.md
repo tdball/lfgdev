@@ -1,5 +1,6 @@
-# LFGPY
-WIP: This is just a side project to dive deeper into understanding communication over sockets with some self-imposed restrictions.
+# LFGDEV
+LFG Deliver Efficient (Not Effective) Value!
+This is just a side project to dive deeper into understanding communication over sockets with some self-imposed restrictions.
 
 ## Restrictions:
 * Use dataclasses as a default, inspired by [Glyph's post](https://blog.glyph.im/2025/04/stop-writing-init-methods.html)
