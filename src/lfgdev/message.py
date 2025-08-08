@@ -45,9 +45,11 @@ class Message:
         return Message.decode(data)
 
     @staticmethod
-    async def from_stream(stream: asyncio.StreamReader) -> Message:
-        data: bytes = await stream.readexactly(Message._STRUCT.size)
-        logger.debug(f"Bytes: {data!r}")
+    async def from_stream(stream: asyncio.StreamReader) -> Message | None:
+        try:
+            data: bytes = await stream.readexactly(Message._STRUCT.size)
+        except asyncio.IncompleteReadError:
+            return None
         return Message.decode(data)
 
     @classmethod
@@ -68,13 +70,13 @@ class Message:
         )
         return message
 
-    def with_kind(self, kind: MessageKind) -> Message:
+    def reply(self, kind: MessageKind) -> Message:
         """
         Messages are immutable, this generates a new message
         from the existing one, with a value override
         """
         return Message(
             identifier=self.identifier,
-            sent_by=self.sent_by,
+            sent_by=Username("SERVER"),
             kind=kind,
         )

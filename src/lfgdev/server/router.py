@@ -1,30 +1,26 @@
 from __future__ import annotations
 
 import logging
-
 from lfgdev.server.db import Database
 from lfgdev.message import Message, MessageKind
 
 logger = logging.getLogger(__name__)
 
 
-async def authenticate_message(message: Message) -> Message:
-    # Should this raise an exception? Or just return None?
-    # Probably None, no need to crash server threads
-    logger.debug("Authenticating...? Go implement this at some point you donut")
+def authenticate_message(message: Message) -> Message:
+    # TODO: This
     return message
 
 
-async def handle_message(message: Message, db: Database) -> Message:
-    if await db.find_by_username(message.sent_by) is None:
-        await db.save(message.sent_by)
+def handle_message(message: Message, db: Database) -> Message:
+    if db.find_by_username(message.sent_by) is None:
+        db.save(message.sent_by)
     else:
-        # TODO: Add an "update" method
-        pass
+        db.update(message.sent_by)
 
     match message.kind:
         case MessageKind.HELLO:
-            return message.with_kind(MessageKind.COMPUTER_SAYS_NO)
+            return message.reply(MessageKind.COMPUTER_SAYS_NO)
         case MessageKind.LFG:
             return message
         case _:

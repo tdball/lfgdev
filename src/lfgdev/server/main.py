@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from asyncio import StreamReader, StreamWriter
 import logging
 import sys
 
@@ -17,22 +18,23 @@ logger = logging.getLogger(__name__)
 class RequestHandler:
     db: Database
 
-    async def handle(
-        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
-    ) -> None:
-        message = Message(sent_by=Username("Server"), kind=MessageKind.MALFORMED)
+    async def handle(self, reader: StreamReader, writer: StreamWriter) -> None:
         try:
-            if message := await Message.from_stream(stream=reader):
-                message = await router.authenticate_message(message)
-                message = await router.handle_message(message, self.db)
-        except TimeoutError:
-            message = Message(
-                sent_by=Username("Server"),
-                kind=MessageKind.TIMEOUT,
-            )
+            response = await Message.from_stream(stream=reader)
+            if response is None:
+                response = Message(
+                    sent_by=Username("SERVER"), kind=MessageKind.MALFORMED
+                )
+            else:
+                message = response
+                logger.debug(f"Request: {message}")
+                message = router.authenticate_message(message)
+                response = router.handle_message(message, self.db)
+
+            logger.debug(f"Response: {response}")
+            writer.write(response.encode())
         finally:
-            logger.debug(f"Response: {message}")
-            writer.write(message.encode())
+            await writer.drain()
             writer.close()
             await writer.wait_closed()
 

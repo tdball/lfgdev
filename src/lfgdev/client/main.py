@@ -64,7 +64,9 @@ class Client:
             message = Message(kind=kind, sent_by=self.username)
             logger.debug(f"Request: {message}")
             writer.write(message.encode())
+            await writer.drain()
             self.metadata.messages_sent += 1
+
             if response := await Message.from_stream(stream=reader):
                 logger.debug(f"Response from {self.address}:{self.port} - {response}")
                 return response
