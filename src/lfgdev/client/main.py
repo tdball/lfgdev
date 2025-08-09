@@ -8,7 +8,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgdev.messages import MessageKind, Hello, Header, Message, NoHello
+from lfgdev.messages import MessageKind, Hello, Header, Message, Response
 from lfgdev.types import Username
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class Client:
             writer.close()
             await writer.wait_closed()
 
-    async def send(self, message: Message) -> tuple[Header, Message]:
+    async def send(self, message: Message) -> Response:
         async with self.connect() as conn:
             reader, writer = conn
             header = Header(kind=message.kind, sent_by=self.username)
@@ -67,13 +67,12 @@ class Client:
             await writer.drain()
             self.metadata.messages_sent += 1
 
-            if header := await Header.from_stream(stream=reader):
-                logger.debug(f"Response from {self.address}:{self.port} - {header}")
-                return header, await NoHello.from_stream(stream=reader)
-            else:
-                raise Exception(
-                    f"Empty or Invalid response from - {self.address}:{self.port}"
-                )
+            header = await Header.from_stream(stream=reader)
+            logger.debug(f"Response from {self.address}:{self.port} - {header}")
+            response = await Response.deserialize(header=header, stream=reader)
+            return response
+            # message = await NoHello.from_stream(stream=reader)
+            # return Response(header, message)
 
 
 def cli() -> None:

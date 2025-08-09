@@ -4,8 +4,7 @@ from asyncio import StreamReader, StreamWriter
 import logging
 import sys
 
-from lfgdev.server import router
-from lfgdev.messages.header import Header
+from lfgdev.messages import Header, Response, Message, MessageKind, NoHello
 from lfgdev.types import Username
 from pathlib import Path
 from lfgdev.server.db import Database
@@ -18,26 +17,44 @@ logger = logging.getLogger(__name__)
 class RequestHandler:
     db: Database
 
+    async def route(self, header: Header, request: Message) -> Message:
+        # Middleware?
+        if self.db.find_by_username(header.sent_by) is None:
+            self.db.save(header.sent_by)
+        else:
+            self.db.update(header.sent_by)
+
+        match request.kind:
+            case MessageKind.HELLO:
+                return NoHello()
+            case MessageKind.NO_HELLO:
+                return request
+            case _:
+                raise NotImplementedError("Ohhhh how did we get here.")
+
     async def handle(self, reader: StreamReader, writer: StreamWriter) -> None:
         logger.debug("Incoming request")
         try:
             header = await Header.from_stream(stream=reader)
             logger.debug(f"Request header: {header}")
-            request = await router.parse_request(header.kind, reader)
-            logger.debug(f"Request body: {request}")
 
+            # I'm not sure Response is the right name for this class
+            response = await Response.deserialize(header=header, stream=reader)
+            logger.debug(f"Request body: {response}")
+
+            # Absolutely needs a better data structure overall
+            message = await self.route(header=header, request=response.body)
             # Whoops, forgot to build a header and send with response.
             # Think of a way to logically prevent this from happening
-            response = router.handle_message(header=header, request=request, db=self.db)
             header = Header(
                 identifier=header.identifier,
-                kind=response.kind,
+                kind=message.kind,
                 sent_by=Username("SERVER"),
             )
             logger.debug(f"Response header: {header}")
             await header.to_stream(stream=writer)
             logger.debug(f"Response body: {response}")
-            await response.to_stream(stream=writer)
+            await message.to_stream(stream=writer)
 
         finally:
             logger.debug("Closing stream")

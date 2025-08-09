@@ -1,6 +1,9 @@
+from __future__ import annotations
 from asyncio import StreamReader, StreamWriter
-from typing import Self, Protocol, ClassVar
+from typing import Self, Protocol, ClassVar, Callable
 from lfgdev.messages.kind import MessageKind
+from lfgdev.messages.header import Header
+from dataclasses import dataclass
 
 
 class Serializable(Protocol):
@@ -17,3 +20,47 @@ class Deserializable(Protocol):
 
 class Message(Serializable, Deserializable, Protocol):
     kind: ClassVar[MessageKind]
+
+
+def deserializes(kind: MessageKind) -> Callable[[type[Message]], type[Message]]:
+    def decorator(message: type[Message]) -> type[Message]:
+        if kind in Response.deserializers:
+            raise ValueError(
+                f"Deserializer for MessageKind.{kind.name} already registered"
+            )
+        Response.register_deserializer(kind=kind, message=message)
+        return message
+
+    return decorator
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class Response:
+    header: Header
+    body: Message
+
+    # request_header: Header
+    # request: Message
+    # response_header: Header
+    # response: Message
+
+    # should this have a param for body decoders?
+    # since this logic is really shared between client and server
+    # there's bound to be some duplication
+    deserializers: ClassVar[dict[MessageKind, type[Message]]] = dict()
+
+    @classmethod
+    def register_deserializer(cls, kind: MessageKind, message: type[Message]) -> None:
+        # Scrappy logic, store a map of decoders of message kind their decoder
+        cls.deserializers.update({kind: message})
+
+    @staticmethod
+    async def deserialize(header: Header, stream: StreamReader) -> Response:
+        # Should ideally return anything matching the Message protocol based on the header
+        if deserializer := Response.deserializers.get(header.kind):
+            # Should we swap out the header here? Since it's the response, maybe
+            # the whole SERVER sent_by thing is weird. Maybe both the request and response
+            # headers should be stored
+            return Response(header=header, body=await deserializer.from_stream(stream))
+        else:
+            raise NotImplementedError(f"No Decoder registered for: {header.kind}")
