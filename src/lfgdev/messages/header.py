@@ -1,12 +1,12 @@
 from __future__ import annotations
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Any, Callable, ClassVar, ByteString, Self
 from uuid import UUID, uuid4
 from struct import Struct
 from lfgdev.messages.kind import MessageKind
 
-from lfgdev.types import Username
+from lfgdev.types import Username, immutable
 
 
 def _to_bytes(value: Any) -> int | bytes:
@@ -21,7 +21,7 @@ def _to_bytes(value: Any) -> int | bytes:
             raise ValueError(f"Unsupported type for encoding: {type(value)}")
 
 
-@dataclass(slots=True, frozen=True, kw_only=True)
+@immutable
 class Header:
     encoder: ClassVar[Callable[[Any], int | bytes]] = field(default=_to_bytes)
     STRUCT: ClassVar[Struct] = Struct(format="!16sx24sxI")

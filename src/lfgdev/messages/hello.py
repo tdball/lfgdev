@@ -1,16 +1,16 @@
 from __future__ import annotations
 from asyncio import StreamReader, StreamWriter
 from struct import Struct
-from dataclasses import dataclass
 from typing import Self, ClassVar, ByteString
 
 from lfgdev.messages.kind import MessageKind
 from lfgdev.messages.protocol import deserialize, serialize
+from lfgdev.types import immutable
 
 
 @serialize
 @deserialize
-@dataclass(frozen=True, kw_only=True, slots=True, repr=False)
+@immutable
 class Hello:
     _STRUCT = Struct("!xI")
     kind: ClassVar[MessageKind] = MessageKind.HELLO
@@ -36,7 +36,7 @@ class Hello:
 
 @serialize
 @deserialize
-@dataclass(frozen=True, kw_only=True, slots=True, repr=False)
+@immutable
 class NoHello:
     kind: ClassVar[MessageKind] = MessageKind.NO_HELLO
     _STRUCT = Struct("!xI")

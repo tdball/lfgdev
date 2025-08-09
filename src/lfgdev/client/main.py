@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from lfgdev.messages import MessageKind, Hello, Header, Incoming, Outgoing
-from lfgdev.types import Username
+from lfgdev.types import Username, immutable
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class ClientMetadata:
     messages_sent: int = 0
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@immutable
 class Client:
     username: Username
     metadata: ClientMetadata = field(default_factory=ClientMetadata)

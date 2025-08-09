@@ -16,7 +16,7 @@ from pathlib import Path
 from lfgdev.server.db import Database
 from dataclasses import dataclass
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -38,7 +38,7 @@ class RequestHandler:
                     sent_by=Username("SERVER"),
                     kind=MessageKind.NO_HELLO,
                 )
-                return Outgoing(response_header, NoHello())
+                return Outgoing(header=response_header, message=NoHello())
             case _:
                 raise NotImplementedError("Ohhhh how did we get here.")
 
@@ -84,9 +84,9 @@ def main() -> None:
 
     try:
         hostname = "localhost" if args.local_only else "0.0.0.0"
-        logger.info("Starting server...")
+        LOG.info("Starting server...")
         with Database.init(path=Path("/tmp/lfg.db")) as db:
-            logger.info(f"Listening on {hostname}:{args.port}...")
+            LOG.info(f"Listening on {hostname}:{args.port}...")
             asyncio.run(serve(host=hostname, port=args.port, db=db))
     except KeyboardInterrupt:
-        logger.info("Shutting down...")
+        LOG.info("Shutting down...")

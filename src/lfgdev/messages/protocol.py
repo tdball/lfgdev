@@ -3,7 +3,7 @@ from asyncio import StreamReader, StreamWriter
 from typing import Self, Protocol, ClassVar
 from lfgdev.messages.kind import MessageKind
 from lfgdev.messages.header import Header
-from dataclasses import dataclass
+from lfgdev.types import immutable
 import logging
 
 LOG = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def serialize(message: type[Message]) -> type[Message]:
     return message
 
 
-@dataclass(frozen=True, slots=True, repr=False)
+@immutable
 class Outgoing:
     header: Header
     message: Message
@@ -66,7 +66,7 @@ def deserialize(message: type[Message]) -> type[Message]:
     return message
 
 
-@dataclass(frozen=True, slots=True, repr=False)
+@immutable
 class Incoming:
     header: Header
     body: Message
