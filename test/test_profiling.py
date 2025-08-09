@@ -5,7 +5,8 @@ import asyncio
 import pytest
 
 from lfgdev.client import Client
-from lfgdev.messages import Hello, Header, Outgoing
+from lfgdev.messages import Hello
+from lfgdev.protocol import Header, Outgoing
 from lfgdev.types import Username
 
 

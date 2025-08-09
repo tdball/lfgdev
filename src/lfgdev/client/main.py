@@ -9,7 +9,8 @@ from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgdev.messages import MessageKind, Hello, Header, Incoming, Outgoing
+from lfgdev.protocol import MessageKind, Header, Incoming, Outgoing
+from lfgdev.messages import Hello
 from lfgdev.types import Username, immutable
 
 LOG = logging.getLogger(__name__)
@@ -101,7 +102,7 @@ def cli() -> None:
         if message_kind is None:
             raise ValueError("Unknown message type")
 
-        header = Header(sent_by=client.username, kind=message_kind)
+        header = Header(sent_by=client.username, content_type=message_kind)
         match message_kind:
             case MessageKind.HELLO:
                 message = Outgoing(header=header, message=Hello())

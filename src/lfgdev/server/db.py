@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 from lfgdev.types import Username
+import math
 
 LOG = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class Database:
             return None
 
     def save(self, username: Username) -> None:
+        last_seen = math.floor(time.time())
         statement = """
             INSERT INTO lfg VALUES(
                 :username,
@@ -64,10 +66,10 @@ class Database:
         """
         with sqlite3.connect(self.path) as conn:
             cursor = conn.cursor()
-            cursor.execute(statement, {"username": username, "last_seen": time.time()})
+            cursor.execute(statement, {"username": username, "last_seen": last_seen})
 
     def update(self, username: Username) -> None:
-        last_seen = time.time()
+        last_seen = math.floor(time.time())
         statement = """
             UPDATE lfg SET last_seen = :last_seen WHERE username = :username
         """

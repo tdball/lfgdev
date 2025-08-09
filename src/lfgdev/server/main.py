@@ -4,22 +4,17 @@ from asyncio import StreamReader, StreamWriter
 import logging
 import sys
 
-from lfgdev.messages import (
-    Header,
-    Incoming,
-    Outgoing,
-    MessageKind,
-    NoHello,
-)
-from lfgdev.types import Username
+from lfgdev.protocol import Header, Incoming, Outgoing, MessageKind
+from lfgdev.messages import NoHello, LastSeen
+from lfgdev.types import Username, immutable
 from pathlib import Path
 from lfgdev.server.db import Database
-from dataclasses import dataclass
+from dataclasses import replace
 
 LOG = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
+@immutable
 class RequestHandler:
     db: Database
 
@@ -36,11 +31,29 @@ class RequestHandler:
                 response_header = Header(
                     identifier=request.header.identifier,
                     sent_by=Username("SERVER"),
-                    kind=MessageKind.NO_HELLO,
+                    content_type=MessageKind.NO_HELLO,
                 )
                 return Outgoing(header=response_header, message=NoHello())
+
+            case MessageKind.LAST_SEEN:
+                response_header = replace(request.header, sent_by=Username("SERVER"))
+                if player := self.db.find_by_username(request.header.sent_by):
+                    return Outgoing(
+                        header=response_header,
+                        message=LastSeen(last_seen=player.last_seen),
+                    )
+                else:
+                    return Outgoing(
+                        header=response_header, message=LastSeen(last_seen=0)
+                    )
+
             case _:
-                raise NotImplementedError("Ohhhh how did we get here.")
+                response_header = replace(
+                    request.header,
+                    content_type=MessageKind.CLIENT_ERROR,
+                    sent_by=Username("SERVER"),
+                )
+                return Outgoing(header=response_header, message=NoHello())
 
     async def handle(self, reader: StreamReader, writer: StreamWriter) -> None:
         try:
