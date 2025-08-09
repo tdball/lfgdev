@@ -1,11 +1,8 @@
-from lfgdev import Message
-from lfgdev.types import MessageKind, Username
+from lfgdev.messages import MessageKind, Header
+from lfgdev.types import Username
 
 
 def test_encode_decode() -> None:
-    message = Message(
-        kind=MessageKind.HELLO,
-        sent_by=Username("TestUser"),
-    )
-    bytes = message.encode()
-    assert Message.decode(bytes) == message
+    header = Header(kind=MessageKind.HELLO, sent_by=Username("TestUser"))
+    bytes = header.encode()
+    assert Header.decode(bytes) == header

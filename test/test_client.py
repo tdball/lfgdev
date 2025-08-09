@@ -1,7 +1,8 @@
 import pytest
 
 from lfgdev import Client
-from lfgdev.types import MessageKind, Username
+from lfgdev.types import Username
+from lfgdev.messages import MessageKind
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
@@ -12,7 +13,7 @@ async def test_server_client_message_passing(client: Client) -> None:
 
 
 async def test_user_persistence(client: Client) -> None:
-    await client.send(MessageKind.LFG)
-    response = await client.send(MessageKind.LFG)
+    await client.send(MessageKind.HELLO)
+    response = await client.send(MessageKind.HELLO)
     assert response.sent_by == client.username
     assert client.metadata.messages_sent == 2

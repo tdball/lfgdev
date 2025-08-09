@@ -1,0 +1,55 @@
+from __future__ import annotations
+from asyncio import StreamReader, StreamWriter
+from struct import Struct
+from dataclasses import dataclass
+from typing import Self, ClassVar, ByteString
+
+from lfgdev.messages.kind import MessageKind
+
+
+@dataclass(frozen=True, kw_only=True, slots=True, repr=False)
+class Hello:
+    _STRUCT = Struct("!xI")
+    kind: ClassVar[MessageKind] = MessageKind.HELLO
+
+    def encode(self) -> bytes:
+        return self._STRUCT.pack(self.kind)
+
+    @classmethod
+    def decode(cls, data: ByteString) -> Self:
+        # kind = cls._STRUCT.unpack(data)[0]
+        return cls()
+
+    @classmethod
+    async def from_stream(cls, stream: StreamReader) -> Self:
+        await stream.readexactly(cls._STRUCT.size)
+        # Silly, but leaving for now, a pattern has to emerge
+        # data = cls._STRUCT.unpack(bytes)
+        return cls()
+
+    async def to_stream(self, stream: StreamWriter) -> None:
+        stream.write(self.encode())
+
+
+@dataclass(frozen=True, kw_only=True, slots=True, repr=False)
+class NoHello:
+    kind: ClassVar[MessageKind] = MessageKind.NO_HELLO
+    _STRUCT = Struct("!xI")
+
+    def encode(self) -> bytes:
+        return self._STRUCT.pack(self.kind)
+
+    @classmethod
+    def decode(cls, data: ByteString) -> Self:
+        # kind = cls._STRUCT.unpack(data)[0]
+        return cls()
+
+    @classmethod
+    async def from_stream(cls, stream: StreamReader) -> Self:
+        await stream.readexactly(cls._STRUCT.size)
+        # Silly, but leaving for now, a pattern has to emerge
+        # data = cls._STRUCT.unpack(bytes)
+        return cls()
+
+    async def to_stream(self, stream: StreamWriter) -> None:
+        stream.write(self.encode())

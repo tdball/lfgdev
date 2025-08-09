@@ -5,7 +5,7 @@ import asyncio
 import pytest
 
 from lfgdev import Client
-from lfgdev.types import MessageKind
+from lfgdev.messages import MessageKind
 
 
 @pytest.mark.profiling

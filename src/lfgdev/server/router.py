@@ -2,28 +2,33 @@ from __future__ import annotations
 
 import logging
 from lfgdev.server.db import Database
-from lfgdev.message import Message, MessageKind
+from asyncio import StreamReader
+from lfgdev.messages.kind import MessageKind
+from lfgdev.messages.header import Header
+from lfgdev.messages.hello import Hello, NoHello
+from lfgdev.messages.protocol import Message
+
 
 logger = logging.getLogger(__name__)
 
 
-def authenticate_message(message: Message) -> Message:
-    # TODO: This
-    return message
-
-
-def handle_message(message: Message, db: Database) -> Message:
-    if db.find_by_username(message.sent_by) is None:
-        db.save(message.sent_by)
-    else:
-        db.update(message.sent_by)
-
-    match message.kind:
+async def parse_request(kind: MessageKind, reader: StreamReader) -> Message:
+    match kind:
         case MessageKind.HELLO:
-            return message.reply(MessageKind.COMPUTER_SAYS_NO)
-        case MessageKind.LFG:
-            return message
+            return await Hello.from_stream(reader)
         case _:
-            logger.debug("No Route Defined")
+            raise NotImplementedError("No Route Defined")
 
-    return message
+
+def handle_message(header: Header, request: Message, db: Database) -> Message:
+    # Middleware?
+    if db.find_by_username(header.sent_by) is None:
+        db.save(header.sent_by)
+    else:
+        db.update(header.sent_by)
+
+    match request.kind:
+        case MessageKind.HELLO:
+            return NoHello()
+        case _:
+            raise NotImplementedError("Ohhhh how did we get here.")

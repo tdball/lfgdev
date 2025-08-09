@@ -5,8 +5,7 @@ import logging
 import sys
 
 from lfgdev.server import router
-from lfgdev.message import Message
-from lfgdev.types import MessageKind, Username
+from lfgdev.messages.header import Header
 from pathlib import Path
 from lfgdev.server.db import Database
 from dataclasses import dataclass
@@ -20,19 +19,10 @@ class RequestHandler:
 
     async def handle(self, reader: StreamReader, writer: StreamWriter) -> None:
         try:
-            response = await Message.from_stream(stream=reader)
-            if response is None:
-                response = Message(
-                    sent_by=Username("SERVER"), kind=MessageKind.MALFORMED
-                )
-            else:
-                message = response
-                logger.debug(f"Request: {message}")
-                message = router.authenticate_message(message)
-                response = router.handle_message(message, self.db)
-
-            logger.debug(f"Response: {response}")
-            writer.write(response.encode())
+            header = await Header.from_stream(stream=reader)
+            request = await router.parse_request(header.kind, reader)
+            response = router.handle_message(header=header, request=request, db=self.db)
+            await response.to_stream(stream=writer)
         finally:
             await writer.drain()
             writer.close()
