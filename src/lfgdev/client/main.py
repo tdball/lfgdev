@@ -12,7 +12,7 @@ from typing import AsyncGenerator
 from lfgdev.messages import MessageKind, Hello, Header, Incoming, Outgoing
 from lfgdev.types import Username, immutable
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=False, slots=True, kw_only=True)
@@ -42,7 +42,7 @@ class Client:
                 )
                 break
             except OSError as error:
-                logger.error(error)
+                LOG.error(error)
                 if "Connect call failed" in error.args[0]:
                     await asyncio.sleep(0.1)
                 raise

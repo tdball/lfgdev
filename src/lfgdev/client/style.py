@@ -4,7 +4,7 @@
 
 import logging
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def input(string: str) -> str:

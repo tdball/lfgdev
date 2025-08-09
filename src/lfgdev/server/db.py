@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterator
 from lfgdev.types import Username
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -29,7 +29,7 @@ class Database:
     @staticmethod
     def init(path: Path) -> Iterator[Database]:
         connection = sqlite3.connect(path)
-        logger.debug(f"Initializing database at {path}")
+        LOG.debug(f"Initializing database at {path}")
         try:
             statement = """
             CREATE TABLE IF NOT EXISTS lfg (
@@ -52,7 +52,7 @@ class Database:
         try:
             return Player(username=data[0], last_seen=data[1])
         except Exception:
-            logger.debug(f"Player {username} not found")
+            LOG.debug(f"Player {username} not found")
             return None
 
     def save(self, username: Username) -> None:
