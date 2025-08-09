@@ -58,19 +58,18 @@ class Client:
             writer.close()
             await writer.wait_closed()
 
-    async def send(self, kind: MessageKind) -> Message:
+    async def send(self, message: Message) -> tuple[Header, Message]:
         async with self.connect() as conn:
             reader, writer = conn
-            header = Header(kind=MessageKind.HELLO, sent_by=self.username)
-            body = Hello()
+            header = Header(kind=message.kind, sent_by=self.username)
             await header.to_stream(writer)
-            await body.to_stream(writer)
+            await message.to_stream(writer)
             await writer.drain()
             self.metadata.messages_sent += 1
 
             if header := await Header.from_stream(stream=reader):
                 logger.debug(f"Response from {self.address}:{self.port} - {header}")
-                return await NoHello.from_stream(stream=reader)
+                return header, await NoHello.from_stream(stream=reader)
             else:
                 raise Exception(
                     f"Empty or Invalid response from - {self.address}:{self.port}"
@@ -99,11 +98,24 @@ def cli() -> None:
         "-v", "--debug", action="store_true", help="Enable verbose/debug logging"
     )
 
-    subparser = parser.add_subparsers()
+    # `send` command
+    subparser = parser.add_subparsers(dest="command")
     send = subparser.add_parser("send")
     send.add_argument("-k", "--kind", choices=MessageKind._member_names_)
+
     args = parser.parse_args()
 
     client = Client(username=args.username, address=args.host, port=args.port)
-    if args.kind:
-        asyncio.run(client.send(kind=MessageKind[args.kind]))
+
+    if args.command == "send":
+        message_kind = MessageKind.for_name(args.kind)
+        if message_kind is None:
+            raise ValueError("Unknown message type")
+
+        match message_kind:
+            case MessageKind.HELLO:
+                message = Hello()
+                # TODO: should probably just assign a future and run it below the match
+                asyncio.run(client.send(message=message))
+            case _:
+                raise NotImplementedError("Unsupported message type")
