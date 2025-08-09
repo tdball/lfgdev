@@ -25,7 +25,7 @@ class RequestHandler:
         else:
             self.db.update(request.header.sent_by)
 
-        match request.body.kind:
+        match request.message.kind:
             case MessageKind.HELLO | MessageKind.NO_HELLO:
                 # Not sure how ergonomic this will be as more messages are added
                 response_header = Header(

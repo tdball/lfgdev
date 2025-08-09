@@ -2,12 +2,11 @@ from __future__ import annotations
 from struct import Struct
 from typing import Self, ClassVar, ByteString
 
-from lfgdev.protocol import deserialize, serialize, Message, MessageKind
+from lfgdev.protocol import streamable, Message, MessageKind
 from lfgdev.types import immutable
 
 
-@serialize
-@deserialize
+@streamable
 @immutable
 class Hello(Message):
     _STRUCT = Struct("!xI")
@@ -22,8 +21,7 @@ class Hello(Message):
         return cls()
 
 
-@serialize
-@deserialize
+@streamable
 @immutable
 class NoHello(Message):
     kind: ClassVar[MessageKind] = MessageKind.NO_HELLO

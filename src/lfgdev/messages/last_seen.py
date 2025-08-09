@@ -2,12 +2,11 @@ from __future__ import annotations
 from struct import Struct
 from typing import Self, ClassVar, ByteString
 
-from lfgdev.protocol import deserialize, serialize, Message, MessageKind
+from lfgdev.protocol import streamable, Message, MessageKind
 from lfgdev.types import immutable
 
 
-@serialize
-@deserialize
+@streamable
 @immutable
 class LastSeen(Message):
     kind: ClassVar[MessageKind] = MessageKind.LAST_SEEN

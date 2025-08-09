@@ -1,6 +1,6 @@
 from __future__ import annotations
 from asyncio import StreamReader, StreamWriter
-from typing import Self, ClassVar, ByteString
+from typing import Self, ClassVar, ByteString, Protocol, runtime_checkable
 from abc import ABC, abstractmethod
 from lfgdev.types import immutable
 from struct import Struct
@@ -20,8 +20,6 @@ LOG = logging.getLogger(__name__)
 class MessageKind(IntEnum):
     @staticmethod
     def from_name(name: str) -> MessageKind | None:
-        # Maybe a more elegant way to handle this, but
-        # _member_map_ returns `Enum` not `MessageKind`
         return cast(MessageKind, MessageKind._member_map_.get(name))
 
     HEADER = auto()
@@ -31,6 +29,20 @@ class MessageKind(IntEnum):
     HELLO = auto()
     NO_HELLO = auto()
     LAST_SEEN = auto()
+
+
+@runtime_checkable
+class MessageProtocol(Protocol):
+    _STRUCT: ClassVar[Struct]
+    kind: ClassVar[MessageKind]
+    encoder: ClassVar[Callable[[Any], int | bytes]]
+
+    @classmethod
+    def decode(cls, bytes: ByteString) -> Self: ...
+    def encode(self) -> bytes: ...
+    async def to_stream(self, stream: StreamWriter) -> None: ...
+    @classmethod
+    async def from_stream(cls, stream: StreamReader) -> Self: ...
 
 
 def to_bytes(value: Any) -> int | bytes:
@@ -70,16 +82,7 @@ class Message(ABC):
         return cls.decode(data)
 
 
-def serialize(message: type[Message]) -> type[Message]:
-    if message.kind in Outgoing.serializers:
-        raise ValueError(
-            f"Serializer for MessageKind.{message.kind.name} already registered"
-        )
-    Outgoing.register_serializer(message=message)
-    return message
-
-
-def deserialize(message: type[Message]) -> type[Message]:
+def streamable(message: type[MessageProtocol]) -> type[MessageProtocol]:
     if message.kind in Incoming.deserializers:
         raise ValueError(
             f"Deserializer for MessageKind.{message.kind.name} already registered"
@@ -91,46 +94,34 @@ def deserialize(message: type[Message]) -> type[Message]:
 @immutable
 class Outgoing:
     header: Header
-    message: Message
-
-    serializers: ClassVar[dict[MessageKind, type[Message]]] = dict()
-
-    @classmethod
-    def register_serializer(cls, message: type[Message]) -> None:
-        cls.serializers.update({message.kind: message})
+    message: MessageProtocol
 
     async def send(self, stream: StreamWriter) -> None:
-        if message := self.serializers.get(self.header.kind):
-            LOG.debug(f"Sending message: {self.header.kind.name}")
-            await self.header.to_stream(stream)
-            # FIXME: this needs to know the contents, maybe Generics?
-            await message().to_stream(stream)
-            await stream.drain()
-        else:
-            raise NotImplementedError(
-                f"No Serializer registered for: MessageKind.{self.header.kind.name}"
-            )
+        LOG.debug(f"Sending message: {self.message.kind.name}")
+        await self.header.to_stream(stream)
+        await self.message.to_stream(stream)
+        await stream.drain()
 
 
 @immutable
 class Incoming:
     header: Header
-    body: Message
+    message: MessageProtocol
 
-    deserializers: ClassVar[dict[MessageKind, type[Message]]] = dict()
+    deserializers: ClassVar[dict[MessageKind, type[MessageProtocol]]] = dict()
 
     @classmethod
-    def register_deserializer(cls, message: type[Message]) -> None:
+    def register_deserializer(cls, message: type[MessageProtocol]) -> None:
         cls.deserializers.update({message.kind: message})
 
     @staticmethod
     async def get(stream: StreamReader) -> Incoming:
         LOG.debug("Receiving message")
         header = await Header.from_stream(stream=stream)
-        LOG.debug(f"Message kind: {header.kind.name}")
-        if deserializer := Incoming.deserializers.get(header.kind):
+        LOG.debug(f"Message kind: {header.content_type.name}")
+        if deserializer := Incoming.deserializers.get(header.content_type):
             message = Incoming(
-                header=header, body=await deserializer.from_stream(stream)
+                header=header, message=await deserializer.from_stream(stream)
             )
             LOG.debug(f"Received message: {message}")
             return message
@@ -140,13 +131,12 @@ class Incoming:
             )
 
 
-@serialize
-@deserialize
+@streamable
 @immutable
 class Header(Message):
+    _STRUCT: ClassVar[Struct] = Struct(format="!16sx24sxI")
     kind: ClassVar[MessageKind] = MessageKind.HEADER
     encoder: ClassVar[Callable[[Any], int | bytes]] = field(default=to_bytes)
-    _STRUCT: ClassVar[Struct] = Struct(format="!16sx24sxI")
 
     identifier: UUID = field(default_factory=uuid4)
     sent_by: Username

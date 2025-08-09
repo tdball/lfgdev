@@ -14,7 +14,7 @@ async def test_server_client_message_passing(client: Client) -> None:
     header = Header(sent_by=Username("TestUser"), content_type=message.kind)
     response = await client.send(request=Outgoing(header=header, message=message))
     assert response.header.sent_by == Username("SERVER")
-    assert response.body.kind == MessageKind.NO_HELLO
+    assert response.message.kind == MessageKind.NO_HELLO
 
 
 async def test_client_metadata_persistence(client: Client) -> None:
