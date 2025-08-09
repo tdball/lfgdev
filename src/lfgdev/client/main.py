@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from lfgdev.protocol import MessageKind, Header, Incoming, Outgoing
-from lfgdev.messages import Hello
+from lfgdev.messages import Hello, LastSeen
 from lfgdev.types import Username, immutable
 
 LOG = logging.getLogger(__name__)
@@ -103,9 +103,13 @@ def cli() -> None:
             raise ValueError("Unknown message type")
 
         header = Header(sent_by=client.username, content_type=message_kind)
+        message = None
         match message_kind:
             case MessageKind.HELLO:
                 message = Outgoing(header=header, message=Hello())
-                asyncio.run(client.send(request=message))
+            case MessageKind.LAST_SEEN:
+                message = Outgoing(header=header, message=LastSeen())
             case _:
                 raise NotImplementedError("Unsupported message type")
+
+        asyncio.run(client.send(request=message))
