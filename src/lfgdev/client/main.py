@@ -58,12 +58,17 @@ class Client:
             writer.close()
             await writer.wait_closed()
 
-    async def send(self, request: Outgoing) -> Incoming:
+    async def send(self, request: Outgoing) -> Incoming | None:
         async with self.connect() as conn:
             reader, writer = conn
-            await request.send(writer)
-            self.metadata.messages_sent += 1
-            return await Incoming.get(stream=reader)
+            try:
+                await request.send(writer)
+                self.metadata.messages_sent += 1
+                return await Incoming.get(stream=reader)
+            except TimeoutError:
+                LOG.error("Request timed out")
+
+        return None
 
 
 def cli() -> None:

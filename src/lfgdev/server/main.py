@@ -60,6 +60,8 @@ class RequestHandler:
             request = await Incoming.get(stream=reader)
             response = await self.route(request=request)
             await response.send(stream=writer)
+        except TimeoutError:
+            LOG.error("TimeoutError occurred")
         finally:
             writer.close()
             await writer.wait_closed()

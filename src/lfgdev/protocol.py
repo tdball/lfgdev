@@ -1,5 +1,5 @@
 from __future__ import annotations
-from asyncio import StreamReader, StreamWriter
+from asyncio import StreamReader, StreamWriter, wait_for
 from typing import Self, ClassVar, ByteString, Protocol, runtime_checkable
 from abc import ABC, abstractmethod
 from lfgdev.types import immutable
@@ -78,7 +78,11 @@ class Message(ABC):
 
     @classmethod
     async def from_stream(cls, stream: StreamReader) -> Self:
-        data = await stream.readexactly(cls._STRUCT.size)
+        data = await wait_for(
+            stream.readexactly(cls._STRUCT.size),
+            # bubble this into a config
+            timeout=5.0,
+        )
         return cls.decode(data)
 
 
@@ -100,7 +104,7 @@ class Outgoing:
         LOG.debug(f"Sending message: {self.message.kind.name}")
         await self.header.to_stream(stream)
         await self.message.to_stream(stream)
-        await stream.drain()
+        await wait_for(stream.drain(), timeout=5.0)
 
 
 @immutable
