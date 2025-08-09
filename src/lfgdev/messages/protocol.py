@@ -1,6 +1,6 @@
 from __future__ import annotations
 from asyncio import StreamReader, StreamWriter
-from typing import Self, Protocol, ClassVar, Callable
+from typing import Self, Protocol, ClassVar
 from lfgdev.messages.kind import MessageKind
 from lfgdev.messages.header import Header
 from dataclasses import dataclass
@@ -22,16 +22,13 @@ class Message(Serializable, Deserializable, Protocol):
     kind: ClassVar[MessageKind]
 
 
-def deserializes(kind: MessageKind) -> Callable[[type[Message]], type[Message]]:
-    def decorator(message: type[Message]) -> type[Message]:
-        if kind in Response.deserializers:
-            raise ValueError(
-                f"Deserializer for MessageKind.{kind.name} already registered"
-            )
-        Response.register_deserializer(kind=kind, message=message)
-        return message
-
-    return decorator
+def deserialize(message: type[Message]) -> type[Message]:
+    if message.kind in Response.deserializers:
+        raise ValueError(
+            f"Deserializer for MessageKind.{message.kind.name} already registered"
+        )
+    Response.register_deserializer(kind=message.kind, message=message)
+    return message
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -63,4 +60,6 @@ class Response:
             # headers should be stored
             return Response(header=header, body=await deserializer.from_stream(stream))
         else:
-            raise NotImplementedError(f"No Decoder registered for: {header.kind}")
+            raise NotImplementedError(
+                f"No Deserializer registered for: MessageKind.{header.kind.name}"
+            )

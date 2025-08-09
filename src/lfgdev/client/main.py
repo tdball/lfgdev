@@ -107,7 +107,7 @@ def cli() -> None:
     client = Client(username=args.username, address=args.host, port=args.port)
 
     if args.command == "send":
-        message_kind = MessageKind.for_name(args.kind)
+        message_kind = MessageKind.from_name(args.kind)
         if message_kind is None:
             raise ValueError("Unknown message type")
 

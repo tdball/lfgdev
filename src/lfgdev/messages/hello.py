@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from typing import Self, ClassVar, ByteString
 
 from lfgdev.messages.kind import MessageKind
-from lfgdev.messages.protocol import deserializes
+from lfgdev.messages.protocol import deserialize
 
 
-@deserializes(kind=MessageKind.HELLO)
+@deserialize
 @dataclass(frozen=True, kw_only=True, slots=True, repr=False)
 class Hello:
     _STRUCT = Struct("!xI")
@@ -33,7 +33,7 @@ class Hello:
         stream.write(self.encode())
 
 
-@deserializes(kind=MessageKind.NO_HELLO)
+@deserialize
 @dataclass(frozen=True, kw_only=True, slots=True, repr=False)
 class NoHello:
     kind: ClassVar[MessageKind] = MessageKind.NO_HELLO
