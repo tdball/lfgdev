@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from typing import Self, ClassVar, ByteString
 
 from lfgdev.messages.kind import MessageKind
-from lfgdev.messages.protocol import deserialize
+from lfgdev.messages.protocol import deserialize, serialize
 
 
+@serialize
 @deserialize
 @dataclass(frozen=True, kw_only=True, slots=True, repr=False)
 class Hello:
@@ -33,6 +34,7 @@ class Hello:
         stream.write(self.encode())
 
 
+@serialize
 @deserialize
 @dataclass(frozen=True, kw_only=True, slots=True, repr=False)
 class NoHello:

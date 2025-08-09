@@ -4,7 +4,8 @@ from typing import Generator
 import pytest
 import time
 import asyncio
-from lfgdev import Client, serve
+from lfgdev.client import Client
+from lfgdev.server import serve
 from lfgdev.server.db import Database
 from lfgdev.types import Username
 

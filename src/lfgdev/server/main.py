@@ -4,7 +4,13 @@ from asyncio import StreamReader, StreamWriter
 import logging
 import sys
 
-from lfgdev.messages import Header, Response, Message, MessageKind, NoHello
+from lfgdev.messages import (
+    Header,
+    Incoming,
+    Outgoing,
+    MessageKind,
+    NoHello,
+)
 from lfgdev.types import Username
 from pathlib import Path
 from lfgdev.server.db import Database
@@ -17,51 +23,33 @@ logger = logging.getLogger(__name__)
 class RequestHandler:
     db: Database
 
-    async def route(self, header: Header, request: Message) -> Message:
+    async def route(self, request: Incoming) -> Outgoing:
         # Middleware?
-        if self.db.find_by_username(header.sent_by) is None:
-            self.db.save(header.sent_by)
+        if self.db.find_by_username(request.header.sent_by) is None:
+            self.db.save(request.header.sent_by)
         else:
-            self.db.update(header.sent_by)
+            self.db.update(request.header.sent_by)
 
-        match request.kind:
-            case MessageKind.HELLO:
-                return NoHello()
-            case MessageKind.NO_HELLO:
-                return request
+        match request.body.kind:
+            case MessageKind.HELLO | MessageKind.NO_HELLO:
+                # Not sure how ergonomic this will be as more messages are added
+                response_header = Header(
+                    identifier=request.header.identifier,
+                    sent_by=Username("SERVER"),
+                    kind=MessageKind.NO_HELLO,
+                )
+                return Outgoing(response_header, NoHello())
             case _:
                 raise NotImplementedError("Ohhhh how did we get here.")
 
     async def handle(self, reader: StreamReader, writer: StreamWriter) -> None:
-        logger.debug("Incoming request")
         try:
-            header = await Header.from_stream(stream=reader)
-            logger.debug(f"Request header: {header}")
-
-            # I'm not sure Response is the right name for this class
-            response = await Response.deserialize(header=header, stream=reader)
-            logger.debug(f"Request body: {response}")
-
-            # Absolutely needs a better data structure overall
-            message = await self.route(header=header, request=response.body)
-            # Whoops, forgot to build a header and send with response.
-            # Think of a way to logically prevent this from happening
-            header = Header(
-                identifier=header.identifier,
-                kind=message.kind,
-                sent_by=Username("SERVER"),
-            )
-            logger.debug(f"Response header: {header}")
-            await header.to_stream(stream=writer)
-            logger.debug(f"Response body: {response}")
-            await message.to_stream(stream=writer)
-
+            request = await Incoming.get(stream=reader)
+            response = await self.route(request=request)
+            await response.send(stream=writer)
         finally:
-            logger.debug("Closing stream")
-            await writer.drain()
             writer.close()
             await writer.wait_closed()
-            logger.debug("Stream closed")
 
 
 async def serve(host: str, port: int, db: Database) -> None:
@@ -86,7 +74,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=1337)
     parser.add_argument("--local-only", action="store_true")
+    parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
+
+    if args.verbose:
+        server_logger.setLevel(logging.DEBUG)
+    else:
+        server_logger.setLevel(logging.INFO)
 
     try:
         hostname = "localhost" if args.local_only else "0.0.0.0"

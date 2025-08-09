@@ -5,10 +5,11 @@ import logging
 import sys
 from dataclasses import dataclass, field
 import asyncio
+from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgdev.messages import MessageKind, Hello, Header, Message, Response
+from lfgdev.messages import MessageKind, Hello, Header, Incoming, Outgoing
 from lfgdev.types import Username
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,9 @@ class Client:
             raise ValueError("Username too long; Must be less than 24 characters")
 
     @asynccontextmanager
-    async def connect(
-        self,
-    ) -> AsyncGenerator[tuple[asyncio.StreamReader, asyncio.StreamWriter], None]:
-        reader: asyncio.StreamReader | None = None
-        writer: asyncio.StreamWriter | None = None
+    async def connect(self) -> AsyncGenerator[tuple[StreamReader, StreamWriter], None]:
+        reader: StreamReader | None = None
+        writer: StreamWriter | None = None
         for _ in range(10):
             try:
                 reader, writer = await asyncio.open_connection(
@@ -58,21 +57,12 @@ class Client:
             writer.close()
             await writer.wait_closed()
 
-    async def send(self, message: Message) -> Response:
+    async def send(self, request: Outgoing) -> Incoming:
         async with self.connect() as conn:
             reader, writer = conn
-            header = Header(kind=message.kind, sent_by=self.username)
-            await header.to_stream(writer)
-            await message.to_stream(writer)
-            await writer.drain()
+            await request.send(writer)
             self.metadata.messages_sent += 1
-
-            header = await Header.from_stream(stream=reader)
-            logger.debug(f"Response from {self.address}:{self.port} - {header}")
-            response = await Response.deserialize(header=header, stream=reader)
-            return response
-            # message = await NoHello.from_stream(stream=reader)
-            # return Response(header, message)
+            return await Incoming.get(stream=reader)
 
 
 def cli() -> None:
@@ -111,10 +101,10 @@ def cli() -> None:
         if message_kind is None:
             raise ValueError("Unknown message type")
 
+        header = Header(sent_by=client.username, kind=message_kind)
         match message_kind:
             case MessageKind.HELLO:
-                message = Hello()
-                # TODO: should probably just assign a future and run it below the match
-                asyncio.run(client.send(message=message))
+                message = Outgoing(header=header, message=Hello())
+                asyncio.run(client.send(request=message))
             case _:
                 raise NotImplementedError("Unsupported message type")

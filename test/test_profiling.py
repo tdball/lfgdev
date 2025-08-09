@@ -4,8 +4,9 @@ import time
 import asyncio
 import pytest
 
-from lfgdev import Client
-from lfgdev.messages import Hello
+from lfgdev.client import Client
+from lfgdev.messages import Hello, Header, Outgoing
+from lfgdev.types import Username
 
 
 @pytest.mark.profiling
@@ -16,12 +17,14 @@ async def test_throughput(client: Client) -> None:
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
     message = Hello()
+    header = Header(sent_by=Username("Profiling"), kind=message.kind)
+    outgoing = Outgoing(header=header, message=message)
     for attempt_count in [1, 10, 100, 1_000]:
         start = time.time()
         async with asyncio.TaskGroup() as tg:
             # I think as long as the client makes it's own socket, this doesn't scale up
             for _ in range(attempt_count):
-                tg.create_task(client.send(message))
+                tg.create_task(client.send(outgoing))
 
         results.update({attempt_count: (time.time() - start) * 1000})
 
