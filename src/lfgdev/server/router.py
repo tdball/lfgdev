@@ -2,7 +2,7 @@ import logging
 from dataclasses import replace
 from typing import Callable, ClassVar
 
-from lfgdev.messages import Message, NoHello
+from lfgdev.messages import LastSeen, Message, NoHello
 from lfgdev.server.db import Database
 from lfgdev.types import ContentType, Username, immutable
 
@@ -23,6 +23,20 @@ def handle_hello(db: Database, message: Message) -> Message:
     return Message(header=header, body=NoHello())
 
 
+def handle_last_seen(db: Database, message: Message) -> Message:
+    # Should validation and error happen at the beginning?
+    if user := db.find_by_username(message.header.sender):
+        message = Message(
+            header=message.header,
+            body=LastSeen(
+                # Unsure how to resolve this at the moment
+                last_seen=user.last_seen,
+            ),
+        )
+
+    return message
+
+
 # This is starting to feel a little like the request_handler
 # maybe this is more a "body handler"? And should we be passing in
 # the db? It can be unused... although I'm not sure what messages would
@@ -31,20 +45,22 @@ def handle_hello(db: Database, message: Message) -> Message:
 class Router:
     _routes: ClassVar[dict[ContentType, Callable[[Database, Message], Message]]] = {
         ContentType.HELLO: handle_hello,
+        ContentType.LAST_SEEN: handle_last_seen,
     }
     db: Database
 
     def route(self, message: Message) -> Message:
-        # Maybe this isn't so ideal
-        header = replace(message.header, sender=Username("SERVER"))
-        message = replace(message, header=header)
-
         # Ideally this takes a message, inspects its content type and
         # routes to the appropriate handler.
         #
         # Maybe the same decorator pattern works here?
         # or that's overkill, just throw a dict on the class itself
         if handler := self._routes.get(message.header.content_type):
-            return handler(self.db, message)
+            message = handler(self.db, message)
+
+        # Maybe this isn't so ideal
+        header = replace(message.header, sender=Username("SERVER"))
+        message = replace(message, header=header)
+
         LOG.warning(f"No handler for {message.body.content_type}")
         return message
