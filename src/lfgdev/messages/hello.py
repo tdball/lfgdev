@@ -1,9 +1,10 @@
 from __future__ import annotations
-from struct import Struct
-from typing import Self, ClassVar
 
-from lfgdev.types import immutable, ContentType
+from struct import Struct
+from typing import ClassVar, Self
+
 from lfgdev.messages import decoder
+from lfgdev.types import ContentType, immutable
 
 
 @decoder.register

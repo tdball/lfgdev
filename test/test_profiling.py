@@ -1,12 +1,13 @@
+import asyncio
 import json
 import logging
 import time
-import asyncio
+
 import pytest
 
 from lfgdev.client import Client
-from lfgdev.messages import Hello, Message, Header
-from lfgdev.types import Username, ContentType
+from lfgdev.messages import Header, Hello, Message
+from lfgdev.types import ContentType, Username
 
 
 @pytest.mark.profiling

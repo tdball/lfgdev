@@ -1,6 +1,5 @@
-from lfgdev.types import Username
 from lfgdev.messages import Header
-from lfgdev.types import ContentType
+from lfgdev.types import ContentType, Username
 
 
 def test_encode_decode() -> None:

@@ -2,8 +2,8 @@ import argparse
 import asyncio
 import logging
 import sys
-
 from pathlib import Path
+
 from lfgdev.server.db import Database
 from lfgdev.server.request_handler import RequestHandler
 

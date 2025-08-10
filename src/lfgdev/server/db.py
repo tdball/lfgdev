@@ -1,13 +1,15 @@
 from __future__ import annotations
-from contextlib import contextmanager
+
 import logging
+import math
 import sqlite3
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
+
 from lfgdev.types import Username
-import math
 
 LOG = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
 format:
     uv run ruff format
     uv run ruff check --fix
+    uv run ruff check --select I --fix
 
 test:
     uv run ruff check

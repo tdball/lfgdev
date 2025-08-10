@@ -1,11 +1,18 @@
 from __future__ import annotations
-from typing import NewType, TypeVar, Callable, TypeAlias, Self, Protocol, ClassVar
-from typing import dataclass_transform
-from dataclasses import dataclass
 
+from dataclasses import dataclass
 from enum import IntEnum, auto
 from struct import Struct
-
+from typing import (
+    Callable,
+    ClassVar,
+    NewType,
+    Protocol,
+    Self,
+    TypeAlias,
+    TypeVar,
+    dataclass_transform,
+)
 
 _T = TypeVar("_T")
 

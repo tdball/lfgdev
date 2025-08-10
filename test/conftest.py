@@ -1,9 +1,11 @@
+import asyncio
+import time
 from pathlib import Path
 from threading import Thread
 from typing import Generator
+
 import pytest
-import time
-import asyncio
+
 from lfgdev.client import Client
 from lfgdev.server import serve
 from lfgdev.server.db import Database

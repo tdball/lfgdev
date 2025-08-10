@@ -1,7 +1,7 @@
-from lfgdev.server.main import Database
-from lfgdev.messages import Message
-
 import logging
+
+from lfgdev.messages import Message
+from lfgdev.server.main import Database
 
 LOG = logging.getLogger(__name__)
 

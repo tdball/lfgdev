@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import logging
 import sys
-from dataclasses import dataclass, field
-import asyncio
 from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
 from typing import AsyncGenerator
 
-from lfgdev.messages import Hello, LastSeen, Message, Header
-from lfgdev.types import Username, immutable, ContentType
+from lfgdev.messages import Header, Hello, LastSeen, Message
+from lfgdev.types import ContentType, Username, immutable
 
 LOG = logging.getLogger(__name__)
 

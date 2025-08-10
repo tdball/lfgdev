@@ -1,14 +1,12 @@
-from lfgdev.types import immutable, Username
-from lfgdev.server.db import Database
-from typing import ClassVar
-from lfgdev.server.types import Middleware
 from asyncio import StreamReader, StreamWriter
-from lfgdev.messages import Message
 from dataclasses import replace
+from typing import ClassVar
 
-
-# Probably should hook this into server startup
+from lfgdev.messages import Message
+from lfgdev.server.db import Database
 from lfgdev.server.middleware import log_message, update_last_seen
+from lfgdev.server.types import Middleware
+from lfgdev.types import Username, immutable
 
 
 @immutable

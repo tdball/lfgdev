@@ -1,5 +1,7 @@
 from dataclasses import FrozenInstanceError
+
 import pytest
+
 from lfgdev.types import immutable
 
 

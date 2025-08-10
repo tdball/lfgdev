@@ -1,11 +1,13 @@
 from __future__ import annotations
-from lfgdev.messages import decoder
-from lfgdev.types import Username, immutable, Body, ContentType
+
 from asyncio import StreamReader, StreamWriter
-from typing import ClassVar
-from struct import Struct
-from uuid import UUID, uuid4
 from dataclasses import field
+from struct import Struct
+from typing import ClassVar
+from uuid import UUID, uuid4
+
+from lfgdev.messages import decoder
+from lfgdev.types import Body, ContentType, Username, immutable
 
 
 @immutable
