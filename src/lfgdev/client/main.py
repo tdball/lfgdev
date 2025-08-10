@@ -9,8 +9,7 @@ from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgdev.messages import Hello, LastSeen
-from lfgdev.message import Message, Header
+from lfgdev.messages import Hello, LastSeen, Message, Header
 from lfgdev.types import Username, immutable, ContentType
 
 LOG = logging.getLogger(__name__)

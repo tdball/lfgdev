@@ -2,8 +2,7 @@ import pytest
 
 from lfgdev.client import Client
 from lfgdev.types import Username
-from lfgdev.messages import Hello
-from lfgdev.message import Message, Header
+from lfgdev.messages import Hello, Message, Header
 from lfgdev.types import ContentType
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.integration]

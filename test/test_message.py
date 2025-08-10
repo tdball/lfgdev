@@ -1,5 +1,5 @@
 from lfgdev.types import Username
-from lfgdev.message import Header
+from lfgdev.messages import Header
 from lfgdev.types import ContentType
 
 

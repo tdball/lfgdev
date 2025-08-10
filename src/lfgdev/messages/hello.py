@@ -3,7 +3,7 @@ from struct import Struct
 from typing import Self, ClassVar
 
 from lfgdev.types import immutable, ContentType
-from lfgdev import decoder
+from lfgdev.messages import decoder
 
 
 @decoder.register
