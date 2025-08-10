@@ -1,36 +1,34 @@
 from __future__ import annotations
 from struct import Struct
-from typing import Self, ClassVar, ByteString
+from typing import Self, ClassVar
 
-from lfgdev.protocol import streamable, Message, MessageKind
-from lfgdev.types import immutable
+from lfgdev.types import immutable, ContentType
+from lfgdev import decoder
 
 
-@streamable
+@decoder.register
 @immutable
-class Hello(Message):
-    _STRUCT = Struct("!xI")
-    kind: ClassVar[MessageKind] = MessageKind.HELLO
+class Hello:
+    content_type: ClassVar[ContentType] = ContentType.HELLO
+    STRUCT: ClassVar[Struct] = Struct("!xI")
 
     def encode(self) -> bytes:
-        return self._STRUCT.pack(self.kind)
+        return self.STRUCT.pack(0)
 
     @classmethod
-    def decode(cls, bytes: ByteString) -> Self:
-        # kind = cls._STRUCT.unpack(data)[0]
+    def decode(cls, data: bytes) -> Hello:
         return cls()
 
 
-@streamable
+@decoder.register
 @immutable
-class NoHello(Message):
-    kind: ClassVar[MessageKind] = MessageKind.NO_HELLO
-    _STRUCT = Struct("!xI")
+class NoHello:
+    content_type: ClassVar[ContentType] = ContentType.NO_HELLO
+    STRUCT: ClassVar[Struct] = Struct("!xI")
 
     def encode(self) -> bytes:
-        return self._STRUCT.pack(self.kind)
+        return self.STRUCT.pack(0)
 
     @classmethod
-    def decode(cls, bytes: ByteString) -> Self:
-        # kind = cls._STRUCT.unpack(data)[0]
+    def decode(cls, data: bytes) -> Self:
         return cls()

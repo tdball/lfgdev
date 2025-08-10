@@ -9,9 +9,9 @@ from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from lfgdev.protocol import MessageKind, Header, Incoming, Outgoing
 from lfgdev.messages import Hello, LastSeen
-from lfgdev.types import Username, immutable
+from lfgdev.message import Message, Header
+from lfgdev.types import Username, immutable, ContentType
 
 LOG = logging.getLogger(__name__)
 
@@ -58,16 +58,15 @@ class Client:
             writer.close()
             await writer.wait_closed()
 
-    async def send(self, request: Outgoing) -> Incoming | None:
+    async def send(self, message: Message) -> Message | None:
         async with self.connect() as conn:
             reader, writer = conn
             try:
-                await request.send(writer)
+                await message.send(writer)
                 self.metadata.messages_sent += 1
-                return await Incoming.get(stream=reader)
+                return await Message.receive(stream=reader)
             except TimeoutError:
                 LOG.error("Request timed out")
-
         return None
 
 
@@ -96,25 +95,25 @@ def cli() -> None:
     # `send` command
     subparser = parser.add_subparsers(dest="command")
     send = subparser.add_parser("send")
-    send.add_argument("-k", "--kind", choices=MessageKind._member_names_)
+    send.add_argument("-k", "--kind", choices=ContentType._member_names_)
 
     args = parser.parse_args()
 
     client = Client(username=args.username, address=args.host, port=args.port)
 
     if args.command == "send":
-        message_kind = MessageKind.from_name(args.kind)
+        message_kind = ContentType.from_name(args.kind)
         if message_kind is None:
             raise ValueError("Unknown message type")
 
-        header = Header(sent_by=client.username, content_type=message_kind)
+        header = Header(sender=client.username, content_type=message_kind)
         message = None
         match message_kind:
-            case MessageKind.HELLO:
-                message = Outgoing(header=header, message=Hello())
-            case MessageKind.LAST_SEEN:
-                message = Outgoing(header=header, message=LastSeen())
+            case ContentType.HELLO:
+                message = Message(header=header, body=Hello())
+            case ContentType.LAST_SEEN:
+                message = Message(header=header, body=LastSeen())
             case _:
                 raise NotImplementedError("Unsupported message type")
 
-        asyncio.run(client.send(request=message))
+        asyncio.run(client.send(message))

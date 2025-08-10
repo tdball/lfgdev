@@ -6,8 +6,8 @@ import pytest
 
 from lfgdev.client import Client
 from lfgdev.messages import Hello
-from lfgdev.protocol import Header, Outgoing
-from lfgdev.types import Username
+from lfgdev.message import Message, Header
+from lfgdev.types import Username, ContentType
 
 
 @pytest.mark.profiling
@@ -17,9 +17,8 @@ async def test_throughput(client: Client) -> None:
     logger = logging.getLogger("lfgdev")
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
-    message = Hello()
-    header = Header(sent_by=Username("Profiling"), kind=message.kind)
-    outgoing = Outgoing(header=header, message=message)
+    header = Header(sender=Username("Profiling"), content_type=ContentType.HELLO)
+    outgoing = Message(header=header, body=Hello())
     for attempt_count in [1, 10, 100, 1_000]:
         start = time.time()
         async with asyncio.TaskGroup() as tg:
