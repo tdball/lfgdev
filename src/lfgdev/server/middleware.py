@@ -15,5 +15,5 @@ def update_last_seen(db: Database, message: Message) -> Message:
 
 
 def log_message(db: Database, message: Message) -> Message:
-    print(f"Received message from {message.header.sender}: {message.body}")
+    LOG.info(f"Received message from {message.header.sender}: {message.body}")
     return message
