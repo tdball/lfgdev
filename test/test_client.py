@@ -13,7 +13,7 @@ async def test_server_client_message_passing(client: Client) -> None:
     if response := await client.send(Message(header=header, body=Hello())):
         assert response.header.sender == Username("SERVER")
         assert response.body is not None
-        assert response.body.content_type == ContentType.HELLO
+        assert response.body.content_type == ContentType.NO_HELLO
     else:
         raise AssertionError("Expected response, none recieved")
 

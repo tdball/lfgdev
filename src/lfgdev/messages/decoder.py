@@ -1,6 +1,7 @@
 from asyncio import StreamReader
 
-from lfgdev.types import Body, ContentType
+from lfgdev.messages.message import Body
+from lfgdev.types import ContentType
 
 _registered_decoders: dict[ContentType, type[Body]] = {}
 

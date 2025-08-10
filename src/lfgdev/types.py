@@ -2,14 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from struct import Struct
 from typing import (
-    Callable,
-    ClassVar,
     NewType,
-    Protocol,
-    Self,
-    TypeAlias,
     TypeVar,
     dataclass_transform,
 )
@@ -40,24 +34,3 @@ def immutable(cls: type[_T]) -> type[_T]:
 @dataclass_transform(kw_only_default=True, frozen_default=True)
 def mutable(cls: type[_T]) -> type[_T]:
     return dataclass(frozen=False, slots=True, kw_only=True)(cls)
-
-
-class Body(Protocol):
-    """
-    I think the mistake here was to include the whole message read from stream etc.
-
-    A body should be able to encode/decode itself from a given set of bytes
-
-    Consider: how does the db interface work here? Should I expect each Message handler
-    to have a db instance to allow queries?
-    """
-
-    content_type: ClassVar[ContentType]
-    STRUCT: ClassVar[Struct]
-
-    @classmethod
-    def decode(cls, data: bytes) -> Self: ...
-    def encode(self) -> bytes: ...
-
-
-Deserializer: TypeAlias = Callable[[bytes], Body]

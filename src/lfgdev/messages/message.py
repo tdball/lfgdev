@@ -3,11 +3,11 @@ from __future__ import annotations
 from asyncio import StreamReader, StreamWriter
 from dataclasses import field
 from struct import Struct
-from typing import ClassVar
+from typing import ClassVar, Protocol, Self
 from uuid import UUID, uuid4
 
 from lfgdev.messages import decoder
-from lfgdev.types import Body, ContentType, Username, immutable
+from lfgdev.types import ContentType, Username, immutable
 
 
 @immutable
@@ -38,8 +38,18 @@ class Header:
         )
 
 
+class Body(Protocol):
+    content_type: ClassVar[ContentType]
+    STRUCT: ClassVar[Struct]
+
+    @classmethod
+    def decode(cls, data: bytes) -> Self: ...
+    def encode(self) -> bytes: ...
+
+
 @immutable
 class Message:
+    # TODO: Consider moving the header into this class
     header: Header
     body: Body
 

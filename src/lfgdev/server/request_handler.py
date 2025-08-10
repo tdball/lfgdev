@@ -1,21 +1,21 @@
 from asyncio import StreamReader, StreamWriter
-from dataclasses import replace
 from typing import ClassVar
 
 from lfgdev.messages import Message
 from lfgdev.server.db import Database
 from lfgdev.server.middleware import log_message, update_last_seen
+from lfgdev.server.router import Router
 from lfgdev.server.types import Middleware
-from lfgdev.types import Username, immutable
+from lfgdev.types import immutable
 
 
 @immutable
 class RequestHandler:
+    _middleware: ClassVar[list[Middleware]] = [log_message, update_last_seen]
     db: Database
-    middleware: ClassVar[list[Middleware]] = [log_message, update_last_seen]
 
     def apply_middleware(self, message: Message) -> Message:
-        for middleware in self.middleware:
+        for middleware in self._middleware:
             message = middleware(self.db, message)
         return message
 
@@ -23,12 +23,8 @@ class RequestHandler:
         try:
             message = await Message.receive(reader)
             self.apply_middleware(message)
-
-            # Just an echo for now, placeholder
-            reply = Message(
-                header=replace(message.header, sender=Username("SERVER")),
-                body=message.body,
-            )
+            router = Router(db=self.db)
+            reply = router.route(message)
             await reply.send(stream=writer)
 
         finally:
