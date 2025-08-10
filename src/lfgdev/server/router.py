@@ -4,7 +4,7 @@ from typing import Callable, ClassVar
 
 from lfgdev.messages import Message, NoHello
 from lfgdev.server.db import Database
-from lfgdev.types import ContentType, immutable, Username
+from lfgdev.types import ContentType, Username, immutable
 
 LOG = logging.getLogger(__name__)
 

@@ -31,6 +31,6 @@ def immutable(cls: type[_T]) -> type[_T]:
     return dataclass(frozen=True, slots=True, kw_only=True)(cls)
 
 
-@dataclass_transform(kw_only_default=True, frozen_default=True)
+@dataclass_transform(kw_only_default=True, frozen_default=False)
 def mutable(cls: type[_T]) -> type[_T]:
     return dataclass(frozen=False, slots=True, kw_only=True)(cls)

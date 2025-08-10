@@ -12,7 +12,7 @@ dependencies = []
 
 [project.scripts]
 lfgdev-server = "lfgdev.server:main.main"
-lfgdev = "lfgdev.client:main.cli"
+lfgdev = "lfgdev.client:main.main"
 
 [dependency-groups]
 dev = [

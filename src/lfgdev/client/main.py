@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-import argparse
 import asyncio
 import logging
-import sys
 from asyncio import StreamReader, StreamWriter
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import AsyncGenerator
 
+from lfgdev.client.cli import cli
 from lfgdev.messages import Header, Hello, LastSeen, Message
-from lfgdev.types import ContentType, Username, immutable
+from lfgdev.types import ContentType, Username, immutable, mutable
 
 LOG = logging.getLogger(__name__)
 
 
-@dataclass(frozen=False, slots=True, kw_only=True)
+@mutable
 class ClientMetadata:
     messages_sent: int = 0
 
@@ -63,50 +62,26 @@ class Client:
             try:
                 await message.send(writer)
                 self.metadata.messages_sent += 1
-                return await Message.receive(stream=reader)
+                reply = await Message.receive(stream=reader)
+                LOG.debug(f"Received reply: {reply}")
+                return reply
             except TimeoutError:
                 LOG.error("Request timed out")
         return None
 
 
-def cli() -> None:
-    client_logger = logging.getLogger("lfgdev")
-    client_logger.addHandler(logging.StreamHandler(sys.stdout))
-    client_logger.setLevel(logging.DEBUG)
-    parser = argparse.ArgumentParser(prog="LFG Client CLI")
-
-    parser.add_argument(
-        "--host",
-        type=str,
-        default="localhost",
-        help="Server hostname to connect to",
+def main() -> None:
+    args = cli()
+    client = Client(
+        username=args.username,
+        address=args.host,
+        port=args.port,
     )
-    parser.add_argument(
-        "-p", "--port", type=int, default=1337, help="Port to connect to"
-    )
-    parser.add_argument(
-        "-u", "--username", type=Username, help="Username to log in with"
-    )
-    parser.add_argument(
-        "-v", "--debug", action="store_true", help="Enable verbose/debug logging"
-    )
-
-    # `send` command
-    subparser = parser.add_subparsers(dest="command")
-    send = subparser.add_parser("send")
-    send.add_argument("-k", "--kind", choices=ContentType._member_names_)
-
-    args = parser.parse_args()
-
-    client = Client(username=args.username, address=args.host, port=args.port)
 
     if args.command == "send":
         message_kind = ContentType.from_name(args.kind)
-        if message_kind is None:
-            raise ValueError("Unknown message type")
-
         header = Header(sender=client.username, content_type=message_kind)
-        message = None
+
         match message_kind:
             case ContentType.HELLO:
                 message = Message(header=header, body=Hello())
