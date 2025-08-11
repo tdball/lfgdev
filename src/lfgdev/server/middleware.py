@@ -1,6 +1,6 @@
 import logging
 
-from lfgdev.messages import Message
+from lfgdev.message import Message
 from lfgdev.server.main import Database
 
 LOG = logging.getLogger(__name__)

@@ -1,55 +1,20 @@
 from __future__ import annotations
 
 from asyncio import StreamReader, StreamWriter
-from dataclasses import field
-from struct import Struct
-from typing import ClassVar, Protocol, Self
-from uuid import UUID, uuid4
 
-from lfgdev.messages import decoder
-from lfgdev.types import ContentType, Username, immutable
+from lfgdev.message import decoder
 
-
-@immutable
-class Header:
-    STRUCT: ClassVar[Struct] = Struct("!16sx24sxI")
-    identifier: UUID = field(default_factory=uuid4)
-    content_type: ContentType
-    sender: Username
-
-    @staticmethod
-    def decode(data: bytes) -> Header:
-        identifier, sender, content_type = Header.STRUCT.unpack(data)
-
-        sender = sender.decode("UTF-8").strip("\x00")
-        sender = Username(sender)
-
-        return Header(
-            identifier=UUID(bytes=identifier),
-            sender=Username(sender),
-            content_type=ContentType(content_type),
-        )
-
-    def encode(self) -> bytes:
-        return Header.STRUCT.pack(
-            self.identifier.bytes,
-            self.sender.encode("UTF-8"),
-            self.content_type,
-        )
-
-
-class Body(Protocol):
-    content_type: ClassVar[ContentType]
-    STRUCT: ClassVar[Struct]
-
-    @classmethod
-    def decode(cls, data: bytes) -> Self: ...
-    def encode(self) -> bytes: ...
+# Exports
+from lfgdev.message.body import Body
+from lfgdev.message.header import Header
+from lfgdev.message.hello import Hello as Hello
+from lfgdev.message.hello import NoHello as NoHello
+from lfgdev.message.last_seen import LastSeen as LastSeen
+from lfgdev.types import ContentType, immutable
 
 
 @immutable
 class Message:
-    # TODO: Consider moving the header into this class
     header: Header
     body: Body
 

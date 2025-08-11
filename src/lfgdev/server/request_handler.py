@@ -1,10 +1,10 @@
 from asyncio import StreamReader, StreamWriter
 from typing import ClassVar
 
-from lfgdev.messages import Message
+from lfgdev.message import Message
 from lfgdev.server.db import Database
+from lfgdev.server.message_handler import MessageHandler
 from lfgdev.server.middleware import log_message, update_last_seen
-from lfgdev.server.router import Router
 from lfgdev.server.types import Middleware
 from lfgdev.types import immutable
 
@@ -23,7 +23,7 @@ class RequestHandler:
         try:
             message = await Message.receive(reader)
             self.apply_middleware(message)
-            router = Router(db=self.db)
+            router = MessageHandler(db=self.db)
             reply = router.route(message)
             await reply.send(stream=writer)
 

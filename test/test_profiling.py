@@ -6,7 +6,7 @@ import time
 import pytest
 
 from lfgdev.client import Client
-from lfgdev.messages import Header, Hello, Message
+from lfgdev.message import Header, Hello, Message
 from lfgdev.types import ContentType, Username
 
 
@@ -18,7 +18,7 @@ async def test_throughput(client: Client) -> None:
     logger.setLevel(logging.WARN)
     results: dict[int, float] = {}
     header = Header(sender=Username("Profiling"), content_type=ContentType.HELLO)
-    outgoing = Message(header=header, body=Hello())
+    outgoing = Message(header=header, body=Hello(model=None))
     for attempt_count in [1, 10, 100, 1_000]:
         start = time.time()
         async with asyncio.TaskGroup() as tg:

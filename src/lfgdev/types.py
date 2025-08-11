@@ -9,7 +9,6 @@ from typing import (
 )
 
 _T = TypeVar("_T")
-
 Username = NewType("Username", str)
 
 

@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from lfgdev.messages import Header, Hello, Message
+from lfgdev.message import Header, Hello, Message
 from lfgdev.server.db import Database
 from lfgdev.server.request_handler import RequestHandler
 from lfgdev.types import ContentType, Username
@@ -19,7 +19,7 @@ def header() -> Header:
 
 @pytest.fixture
 def message(header: Header) -> Message:
-    return Message(header=header, body=Hello())
+    return Message(header=header, body=Hello(model=None))
 
 
 @pytest.fixture

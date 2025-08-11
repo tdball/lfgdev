@@ -3,33 +3,36 @@ from __future__ import annotations
 from struct import Struct
 from typing import ClassVar, Self
 
-from lfgdev.messages import decoder
+from lfgdev.message.body import Body
+from lfgdev.message.decoder import register_decoder
 from lfgdev.types import ContentType, immutable
 
 
-@decoder.register
+@register_decoder
 @immutable
-class Hello:
+class Hello(Body):
     content_type: ClassVar[ContentType] = ContentType.HELLO
     STRUCT: ClassVar[Struct] = Struct("!xI")
+    model: None
 
     def encode(self) -> bytes:
         return self.STRUCT.pack(0)
 
     @classmethod
     def decode(cls, data: bytes) -> Hello:
-        return cls()
+        return cls(model=None)
 
 
-@decoder.register
+@register_decoder
 @immutable
-class NoHello:
+class NoHello(Body):
     content_type: ClassVar[ContentType] = ContentType.NO_HELLO
     STRUCT: ClassVar[Struct] = Struct("!xI")
+    model: None
 
     def encode(self) -> bytes:
         return self.STRUCT.pack(0)
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
-        return cls()
+        return cls(model=None)
