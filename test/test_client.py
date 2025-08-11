@@ -8,7 +8,6 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
 async def test_server_client_message_passing(client: Client) -> None:
-    # Maybe message should be body?
     header = Header(sender=Username("TestUser"), content_type=ContentType.HELLO)
     if response := await client.send(Message(header=header, body=Hello(model=None))):
         assert response.header.sender == Username("SERVER")
