@@ -11,3 +11,7 @@ test:
 
 profile:
     uv run pytest -m profiling
+
+
+serve:
+    uv run lfgdev-server -v
