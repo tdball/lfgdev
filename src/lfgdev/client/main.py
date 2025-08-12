@@ -8,8 +8,7 @@ from dataclasses import field
 from typing import AsyncGenerator
 
 from lfgdev.client.cli import cli
-from lfgdev.message import Header, Hello, LastSeen, Message
-from lfgdev.message.last_seen import LastSeenModel
+from lfgdev.message import Header, Hello, LastSeen, Message, Register
 from lfgdev.types import ContentType, Username, immutable, mutable
 
 LOG = logging.getLogger(__name__)
@@ -85,9 +84,11 @@ def main() -> None:
 
         match message_kind:
             case ContentType.HELLO:
-                message = Message(header=header, body=Hello(model=None))
+                message = Message(header=header, body=Hello(content=None))
             case ContentType.LAST_SEEN:
-                message = Message(header=header, body=LastSeen(model=LastSeenModel()))
+                message = Message(header=header, body=LastSeen(content=None))
+            case ContentType.REGISTER:
+                message = Message(header=header, body=Register(content=args.username))
             case _:
                 raise NotImplementedError("Unsupported message type")
 

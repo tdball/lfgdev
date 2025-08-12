@@ -9,17 +9,17 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 async def test_server_client_message_passing(client: Client) -> None:
     header = Header(sender=Username("TestUser"), content_type=ContentType.HELLO)
-    if response := await client.send(Message(header=header, body=Hello(model=None))):
+    if response := await client.send(Message(header=header, body=Hello(content=None))):
         assert response.header.sender == Username("SERVER")
-        assert response.body is not None
-        assert response.body.content_type == ContentType.NO_HELLO
+        assert response.header.content_type == ContentType.NO_HELLO
+        assert response.body.content is None
     else:
         raise AssertionError("Expected response, none recieved")
 
 
 async def test_client_metadata_persistence(client: Client) -> None:
     header = Header(sender=Username("TestUser"), content_type=ContentType.HELLO)
-    body = Hello(model=None)
+    body = Hello(content=None)
     message = Message(header=header, body=body)
     await client.send(message)
     await client.send(message)

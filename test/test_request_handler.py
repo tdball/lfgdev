@@ -19,7 +19,7 @@ def header() -> Header:
 
 @pytest.fixture
 def message(header: Header) -> Message:
-    return Message(header=header, body=Hello(model=None))
+    return Message(header=header, body=Hello(content=None))
 
 
 @pytest.fixture

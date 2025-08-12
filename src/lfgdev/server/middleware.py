@@ -7,10 +7,9 @@ LOG = logging.getLogger(__name__)
 
 
 def update_last_seen(db: Database, message: Message) -> Message:
-    if db.find_by_username(message.header.sender) is None:
-        db.save(message.header.sender)
-    else:
+    if db.find_by_username(message.header.sender) is not None:
         db.update(message.header.sender)
+    # TODO: Another need for a status code of some sort
     return message
 
 

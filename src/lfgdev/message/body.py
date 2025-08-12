@@ -4,14 +4,13 @@ from abc import ABC, abstractmethod
 from struct import Struct
 from typing import Any, ClassVar, Self
 
-from lfgdev.types import ContentType, immutable
+from lfgdev.types import immutable
 
 
 @immutable
 class Body(ABC):
-    content_type: ClassVar[ContentType]
     STRUCT: ClassVar[Struct]
-    model: Any
+    content: Any
 
     @classmethod
     @abstractmethod

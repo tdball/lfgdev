@@ -6,11 +6,11 @@ format:
 test:
     uv run ruff check
     uv run ruff format --check
-    uv run mypy
-    uv run pytest -sv
+    uv run ty check
+    uv run pytest --memray -sv
 
 profile:
-    uv run pytest -m profiling
+    uv run pytest --memray -m profiling
 
 
 serve:

@@ -23,13 +23,15 @@ class ContentType(IntEnum):
     HELLO = auto()
     NO_HELLO = auto()
     LAST_SEEN = auto()
+    REGISTER = auto()
+    ERROR = auto()
 
 
 @dataclass_transform(kw_only_default=True, frozen_default=True)
 def immutable(cls: type[_T]) -> type[_T]:
-    return dataclass(frozen=True, slots=True, kw_only=True)(cls)
+    return dataclass(frozen=True, slots=True, kw_only=True)(cls)  # ty: ignore[call-non-callable]
 
 
 @dataclass_transform(kw_only_default=True, frozen_default=False)
 def mutable(cls: type[_T]) -> type[_T]:
-    return dataclass(frozen=False, slots=True, kw_only=True)(cls)
+    return dataclass(frozen=False, slots=True, kw_only=True)(cls)  # ty: ignore[call-non-callable]
